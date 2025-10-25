@@ -1,3 +1,5 @@
+git add README.md
+git commit -m "first commit"
 # hackifm
 
 A new Flutter project.
