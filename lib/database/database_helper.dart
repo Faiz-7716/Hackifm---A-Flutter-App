@@ -20,12 +20,8 @@ class DatabaseHelper {
   Future<Database> _initDatabase() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
     String path = join(documentsDirectory.path, 'hackifm.db');
-    
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: _onCreate,
-    );
+
+    return await openDatabase(path, version: 1, onCreate: _onCreate);
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -113,12 +109,7 @@ class DatabaseHelper {
 
   Future<int> updateUser(int id, Map<String, dynamic> user) async {
     Database db = await database;
-    return await db.update(
-      'users',
-      user,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.update('users', user, where: 'id = ?', whereArgs: [id]);
   }
 
   // COURSE CRUD OPERATIONS
@@ -134,21 +125,12 @@ class DatabaseHelper {
 
   Future<int> updateCourse(int id, Map<String, dynamic> course) async {
     Database db = await database;
-    return await db.update(
-      'courses',
-      course,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.update('courses', course, where: 'id = ?', whereArgs: [id]);
   }
 
   Future<int> deleteCourse(int id) async {
     Database db = await database;
-    return await db.delete(
-      'courses',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.delete('courses', where: 'id = ?', whereArgs: [id]);
   }
 
   // INTERNSHIP CRUD OPERATIONS

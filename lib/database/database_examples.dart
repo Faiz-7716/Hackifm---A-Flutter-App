@@ -26,7 +26,7 @@ class DatabaseExamples {
   Future<User?> loginUser(String email, String password) async {
     try {
       final userData = await _db.getUserByEmail(email);
-      
+
       if (userData != null && userData['password'] == password) {
         return User.fromMap(userData);
       }
@@ -83,7 +83,7 @@ class DatabaseExamples {
     try {
       // Mark internship as applied
       await _db.updateInternship(internshipId, {'applied': 1});
-      
+
       // Create application record
       await _db.insertApplication({
         'user_id': userId,
@@ -92,7 +92,7 @@ class DatabaseExamples {
         'status': 'pending',
         'applied_date': DateTime.now().toIso8601String(),
       });
-      
+
       print('Applied for internship successfully');
     } catch (e) {
       print('Error applying for internship: $e');
@@ -132,7 +132,7 @@ class DatabaseExamples {
     try {
       // Mark hackathon as registered
       await _db.updateHackathon(hackathonId, {'registered': 1});
-      
+
       // Create application record
       await _db.insertApplication({
         'user_id': userId,
@@ -141,7 +141,7 @@ class DatabaseExamples {
         'status': 'registered',
         'applied_date': DateTime.now().toIso8601String(),
       });
-      
+
       print('Registered for hackathon successfully');
     } catch (e) {
       print('Error registering for hackathon: $e');
