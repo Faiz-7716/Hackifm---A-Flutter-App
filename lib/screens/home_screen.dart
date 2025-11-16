@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:hackifm/services/api_service.dart';
+import 'package:hackifm/screens/courses_screen.dart';
+import 'package:hackifm/screens/events_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,8 +16,8 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Widget> _pages = [
     const HomePage(),
     const InternshipsPage(),
-    const CoursesPage(),
-    const HackathonPage(),
+    const CoursesScreen(),
+    const EventsScreen(),
     const ProfilePage(),
   ];
 
@@ -77,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 NavigationRailDestination(
                   icon: Icon(Icons.emoji_events_outlined),
                   selectedIcon: Icon(Icons.emoji_events),
-                  label: Text('Hackathon'),
+                  label: Text('Events'),
                 ),
                 NavigationRailDestination(
                   icon: Icon(Icons.person_outline),
@@ -123,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 BottomNavigationBarItem(
                   icon: Icon(Icons.emoji_events_outlined),
                   activeIcon: Icon(Icons.emoji_events),
-                  label: 'Hackathon',
+                  label: 'Events',
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.person_outline),
@@ -412,7 +415,7 @@ class HomePage extends StatelessWidget {
                     ),
                     _buildQuickAccessCard(
                       context,
-                      'Hackathon',
+                      'Events',
                       'Find opportunities',
                       Icons.emoji_events,
                       const Color(0xFF7B8CFF),
@@ -452,7 +455,7 @@ class HomePage extends StatelessWidget {
           pageIndex = 1;
         } else if (title == 'Courses') {
           pageIndex = 2;
-        } else if (title == 'Hackathon') {
+        } else if (title == 'Events') {
           pageIndex = 3;
         } else if (title == 'Profile') {
           pageIndex = 4;
@@ -1434,26 +1437,87 @@ class ProfilePage extends StatelessWidget {
               ),
               const SizedBox(height: 32),
               // Menu Items
-              _buildMenuItem(
-                Icons.person_outline,
-                'Edit Profile',
-                isSmallScreen,
+              FutureBuilder<Map<String, dynamic>>(
+                future: ApiService().getCurrentUser(),
+                builder: (context, snapshot) {
+                  final userData = snapshot.data?['user'] ?? {};
+                  return GestureDetector(
+                    onTap: () async {
+                      if (userData.isNotEmpty) {
+                        await Navigator.pushNamed(
+                          context,
+                          '/profile/edit',
+                          arguments: userData,
+                        );
+                      }
+                    },
+                    child: _buildMenuItem(
+                      Icons.person_outline,
+                      'Edit Profile',
+                      isSmallScreen,
+                    ),
+                  );
+                },
               ),
-              _buildMenuItem(
-                Icons.bookmark_outline,
-                'Saved Items',
-                isSmallScreen,
+              GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(context, '/profile/resume');
+                },
+                child: _buildMenuItem(
+                  Icons.description_outlined,
+                  'My Resume',
+                  isSmallScreen,
+                ),
               ),
-              _buildMenuItem(Icons.history, 'Learning History', isSmallScreen),
-              _buildMenuItem(
-                Icons.card_membership,
-                'Certificates',
-                isSmallScreen,
+              GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(context, '/profile/applications');
+                },
+                child: _buildMenuItem(
+                  Icons.work_outline,
+                  'My Applications',
+                  isSmallScreen,
+                ),
               ),
-              _buildMenuItem(
-                Icons.notifications_outlined,
-                'Notifications',
-                isSmallScreen,
+              GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(context, '/profile/saved-items');
+                },
+                child: _buildMenuItem(
+                  Icons.bookmark_outline,
+                  'Saved Items',
+                  isSmallScreen,
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(context, '/profile/security');
+                },
+                child: _buildMenuItem(
+                  Icons.security,
+                  'Security Settings',
+                  isSmallScreen,
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(context, '/profile/sessions');
+                },
+                child: _buildMenuItem(
+                  Icons.devices,
+                  'Active Sessions',
+                  isSmallScreen,
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(context, '/login-activity');
+                },
+                child: _buildMenuItem(
+                  Icons.history,
+                  'Login History',
+                  isSmallScreen,
+                ),
               ),
               _buildMenuItem(
                 Icons.help_outline,
@@ -1464,6 +1528,38 @@ class ProfilePage extends StatelessWidget {
                 Icons.privacy_tip_outlined,
                 'Privacy Policy',
                 isSmallScreen,
+              ),
+              FutureBuilder<bool>(
+                future: ApiService().isAdmin(),
+                builder: (context, snapshot) {
+                  if (snapshot.data == true) {
+                    return Column(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(context, '/database-viewer');
+                          },
+                          child: _buildMenuItem(
+                            Icons.storage,
+                            'Database Viewer',
+                            isSmallScreen,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(context, '/admin-home');
+                          },
+                          child: _buildMenuItem(
+                            Icons.admin_panel_settings,
+                            'Admin Access',
+                            isSmallScreen,
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
               ),
               const SizedBox(height: 16),
               // Logout Button

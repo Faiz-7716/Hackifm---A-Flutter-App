@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:hackifm/providers/auth_provider.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -8,6 +10,7 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
@@ -15,6 +18,87 @@ class _SignUpPageState extends State<SignUpPage> {
   bool _agreeToPolicy = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  bool _isLoading = false;
+
+  // Password strength
+  double _passwordStrength = 0.0;
+  bool _hasUppercase = false;
+  bool _hasLowercase = false;
+  bool _hasNumber = false;
+  bool _hasSpecialChar = false;
+  bool _hasMinLength = false;
+
+  Future<void> _handleSignup() async {
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
+
+    if (name.isEmpty ||
+        email.isEmpty ||
+        password.isEmpty ||
+        confirmPassword.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill all fields'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Passwords do not match'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (!_agreeToPolicy) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please agree to the privacy policy'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final result = await authProvider.signup(name, email, password);
+
+      if (!mounted) return;
+
+      setState(() => _isLoading = false);
+
+      if (result['success'] == true) {
+        Navigator.pushReplacementNamed(
+          context,
+          '/account-type-selection',
+          arguments: {'userName': name, 'userEmail': email},
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Signup failed'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -129,6 +213,14 @@ class _SignUpPageState extends State<SignUpPage> {
                         ),
                         SizedBox(height: isSmallScreen ? 24 : 32),
 
+                        // Name field
+                        _buildTextField(
+                          controller: _nameController,
+                          hint: 'Full Name',
+                          icon: Icons.person_outline,
+                        ),
+                        const SizedBox(height: 16),
+
                         // Email field
                         _buildTextField(
                           controller: _emailController,
@@ -143,6 +235,7 @@ class _SignUpPageState extends State<SignUpPage> {
                           hint: 'Password',
                           icon: Icons.lock_outline,
                           obscureText: _obscurePassword,
+                          onChanged: _checkPasswordStrength,
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscurePassword
@@ -158,6 +251,15 @@ class _SignUpPageState extends State<SignUpPage> {
                             },
                           ),
                         ),
+                        const SizedBox(height: 12),
+
+                        // Password strength meter
+                        if (_passwordController.text.isNotEmpty) ...[
+                          _buildPasswordStrengthMeter(),
+                          const SizedBox(height: 8),
+                          _buildPasswordRequirements(),
+                        ],
+
                         const SizedBox(height: 16),
 
                         // Confirm Password field
@@ -244,12 +346,9 @@ class _SignUpPageState extends State<SignUpPage> {
                                   width: double.infinity,
                                   height: isSmallScreen ? 48 : 56,
                                   child: ElevatedButton(
-                                    onPressed: () {
-                                      Navigator.pushReplacementNamed(
-                                        context,
-                                        '/home',
-                                      );
-                                    },
+                                    onPressed: _isLoading
+                                        ? null
+                                        : _handleSignup,
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.white,
                                       foregroundColor: const Color(0xFF2D3142),
@@ -258,14 +357,23 @@ class _SignUpPageState extends State<SignUpPage> {
                                         borderRadius: BorderRadius.circular(28),
                                       ),
                                     ),
-                                    child: Text(
-                                      'SIGN UP',
-                                      style: TextStyle(
-                                        fontSize: isSmallScreen ? 14 : 16,
-                                        fontWeight: FontWeight.w600,
-                                        letterSpacing: 1.2,
-                                      ),
-                                    ),
+                                    child: _isLoading
+                                        ? SizedBox(
+                                            height: 24,
+                                            width: 24,
+                                            child: CircularProgressIndicator(
+                                              color: const Color(0xFF2D3142),
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                        : Text(
+                                            'SIGN UP',
+                                            style: TextStyle(
+                                              fontSize: isSmallScreen ? 14 : 16,
+                                              fontWeight: FontWeight.w600,
+                                              letterSpacing: 1.2,
+                                            ),
+                                          ),
                                   ),
                                 ),
                               ),
@@ -326,12 +434,129 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
+  void _checkPasswordStrength(String password) {
+    setState(() {
+      _hasUppercase = password.contains(RegExp(r'[A-Z]'));
+      _hasLowercase = password.contains(RegExp(r'[a-z]'));
+      _hasNumber = password.contains(RegExp(r'[0-9]'));
+      _hasSpecialChar = password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
+      _hasMinLength = password.length >= 8;
+
+      int strengthCount = 0;
+      if (_hasUppercase) strengthCount++;
+      if (_hasLowercase) strengthCount++;
+      if (_hasNumber) strengthCount++;
+      if (_hasSpecialChar) strengthCount++;
+      if (_hasMinLength) strengthCount++;
+
+      _passwordStrength = strengthCount / 5;
+    });
+  }
+
+  Widget _buildPasswordStrengthMeter() {
+    Color meterColor;
+    String strengthText;
+
+    if (_passwordStrength < 0.4) {
+      meterColor = Colors.red;
+      strengthText = 'Weak';
+    } else if (_passwordStrength < 0.8) {
+      meterColor = Colors.orange;
+      strengthText = 'Medium';
+    } else {
+      meterColor = Colors.green;
+      strengthText = 'Strong';
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Password Strength',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            Text(
+              strengthText,
+              style: TextStyle(
+                fontSize: 12,
+                color: meterColor,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: _passwordStrength,
+            backgroundColor: Colors.grey[200],
+            valueColor: AlwaysStoppedAnimation<Color>(meterColor),
+            minHeight: 6,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPasswordRequirements() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildRequirementItem('At least 8 characters', _hasMinLength),
+          _buildRequirementItem('One uppercase letter', _hasUppercase),
+          _buildRequirementItem('One number', _hasNumber),
+          _buildRequirementItem('One special character', _hasSpecialChar),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRequirementItem(String text, bool isMet) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(
+            isMet ? Icons.check_circle : Icons.circle_outlined,
+            size: 16,
+            color: isMet ? Colors.green : Colors.grey[400],
+          ),
+          const SizedBox(width: 8),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 12,
+              color: isMet ? Colors.green[700] : Colors.grey[600],
+              fontWeight: isMet ? FontWeight.w500 : FontWeight.normal,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildTextField({
     required TextEditingController controller,
     required String hint,
     required IconData icon,
     bool obscureText = false,
     Widget? suffixIcon,
+    Function(String)? onChanged,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -341,11 +566,12 @@ class _SignUpPageState extends State<SignUpPage> {
       child: TextField(
         controller: controller,
         obscureText: obscureText,
-        style: const TextStyle(fontSize: 14),
+        onChanged: onChanged,
+        style: const TextStyle(fontSize: 14, color: Color(0xFF2D3142)),
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
-          prefixIcon: Icon(icon, color: Colors.grey[400], size: 20),
+          prefixIcon: Icon(icon, color: Colors.grey[600], size: 20),
           suffixIcon: suffixIcon,
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
@@ -359,6 +585,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();

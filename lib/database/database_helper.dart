@@ -154,6 +154,11 @@ class DatabaseHelper {
     );
   }
 
+  Future<int> deleteInternship(int id) async {
+    Database db = await database;
+    return await db.delete('internships', where: 'id = ?', whereArgs: [id]);
+  }
+
   // HACKATHON CRUD OPERATIONS
   Future<int> insertHackathon(Map<String, dynamic> hackathon) async {
     Database db = await database;
@@ -173,6 +178,11 @@ class DatabaseHelper {
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+
+  Future<int> deleteHackathon(int id) async {
+    Database db = await database;
+    return await db.delete('hackathons', where: 'id = ?', whereArgs: [id]);
   }
 
   // APPLICATION CRUD OPERATIONS

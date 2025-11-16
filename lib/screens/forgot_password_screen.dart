@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hackifm/services/api_service.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -9,6 +10,16 @@ class ForgotPasswordScreen extends StatefulWidget {
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _otpController = TextEditingController();
+  final TextEditingController _newPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
+
+  bool _isLoading = false;
+  bool _otpSent = false;
+  String? _resetToken;
+  bool _obscureNewPassword = true;
+  bool _obscureConfirmPassword = true;
 
   @override
   Widget build(BuildContext context) {
@@ -108,7 +119,65 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           controller: _emailController,
                           hint: 'Email',
                           icon: Icons.email_outlined,
+                          enabled: !_otpSent,
                         ),
+
+                        if (_otpSent) ...[
+                          const SizedBox(height: 16),
+                          // OTP field
+                          _buildTextField(
+                            controller: _otpController,
+                            hint: '6-Digit OTP',
+                            icon: Icons.lock_clock,
+                          ),
+                          const SizedBox(height: 16),
+                          // New Password field
+                          _buildTextField(
+                            controller: _newPasswordController,
+                            hint: 'New Password',
+                            icon: Icons.lock_outline,
+                            obscureText: _obscureNewPassword,
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscureNewPassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                                color: Colors.grey[600],
+                                size: 20,
+                              ),
+                              onPressed: () {
+                                setState(
+                                  () => _obscureNewPassword =
+                                      !_obscureNewPassword,
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          // Confirm Password field
+                          _buildTextField(
+                            controller: _confirmPasswordController,
+                            hint: 'Confirm Password',
+                            icon: Icons.lock_outline,
+                            obscureText: _obscureConfirmPassword,
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscureConfirmPassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                                color: Colors.grey[600],
+                                size: 20,
+                              ),
+                              onPressed: () {
+                                setState(
+                                  () => _obscureConfirmPassword =
+                                      !_obscureConfirmPassword,
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+
                         SizedBox(height: isSmallScreen ? 24 : 32),
 
                         // Pink wave section with submit button
@@ -138,28 +207,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                   width: double.infinity,
                                   height: isSmallScreen ? 48 : 56,
                                   child: ElevatedButton(
-                                    onPressed: () {
-                                      // Show success message
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Password reset link sent to ${_emailController.text}',
-                                          ),
-                                          backgroundColor: const Color(
-                                            0xFF3498DB,
-                                          ),
-                                        ),
-                                      );
-                                      // Navigate back after a delay
-                                      Future.delayed(
-                                        const Duration(seconds: 2),
-                                        () {
-                                          Navigator.pop(context);
-                                        },
-                                      );
-                                    },
+                                    onPressed: _isLoading
+                                        ? null
+                                        : (_otpSent
+                                              ? _handleResetPassword
+                                              : _handleSendOTP),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.white,
                                       foregroundColor: const Color(0xFF2D3142),
@@ -168,14 +220,25 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                         borderRadius: BorderRadius.circular(28),
                                       ),
                                     ),
-                                    child: Text(
-                                      'SUBMIT',
-                                      style: TextStyle(
-                                        fontSize: isSmallScreen ? 14 : 16,
-                                        fontWeight: FontWeight.w600,
-                                        letterSpacing: 1.2,
-                                      ),
-                                    ),
+                                    child: _isLoading
+                                        ? SizedBox(
+                                            height: 24,
+                                            width: 24,
+                                            child: CircularProgressIndicator(
+                                              color: const Color(0xFF2D3142),
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                        : Text(
+                                            _otpSent
+                                                ? 'RESET PASSWORD'
+                                                : 'SEND OTP',
+                                            style: TextStyle(
+                                              fontSize: isSmallScreen ? 14 : 16,
+                                              fontWeight: FontWeight.w600,
+                                              letterSpacing: 1.2,
+                                            ),
+                                          ),
                                   ),
                                 ),
                               ),
@@ -233,24 +296,161 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
+  Future<void> _handleSendOTP() async {
+    final email = _emailController.text.trim();
+
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter your email'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final result = await ApiService().forgotPassword(email: email);
+
+      if (!mounted) return;
+
+      setState(() => _isLoading = false);
+
+      if (result['success'] == true) {
+        setState(() {
+          _otpSent = true;
+          _resetToken = result['reset_token'];
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('OTP sent to your email! Check your inbox.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Failed to send OTP'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  Future<void> _handleResetPassword() async {
+    final email = _emailController.text.trim();
+    final otp = _otpController.text.trim();
+    final newPassword = _newPasswordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
+
+    if (otp.isEmpty || newPassword.isEmpty || confirmPassword.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill all fields'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (newPassword != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Passwords do not match'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (_resetToken == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Invalid reset token. Please request OTP again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final result = await ApiService().resetPassword(
+        email: email,
+        otp: otp,
+        resetToken: _resetToken!,
+        newPassword: newPassword,
+      );
+
+      if (!mounted) return;
+
+      setState(() => _isLoading = false);
+
+      if (result['success'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Password reset successfully! Please login.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        Future.delayed(const Duration(seconds: 2), () {
+          Navigator.pushReplacementNamed(context, '/login');
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Failed to reset password'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
   Widget _buildTextField({
     required TextEditingController controller,
     required String hint,
     required IconData icon,
+    bool obscureText = false,
+    Widget? suffixIcon,
+    bool enabled = true,
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color: enabled ? Colors.grey[100] : Colors.grey[200],
         borderRadius: BorderRadius.circular(12),
       ),
       child: TextField(
         controller: controller,
-        style: const TextStyle(fontSize: 14),
-        keyboardType: TextInputType.emailAddress,
+        enabled: enabled,
+        obscureText: obscureText,
+        style: const TextStyle(fontSize: 14, color: Color(0xFF2D3142)),
+        keyboardType: hint.contains('Email')
+            ? TextInputType.emailAddress
+            : TextInputType.text,
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
-          prefixIcon: Icon(icon, color: Colors.grey[400], size: 20),
+          prefixIcon: Icon(icon, color: Colors.grey[600], size: 20),
+          suffixIcon: suffixIcon,
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
@@ -264,6 +464,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   void dispose() {
     _emailController.dispose();
+    _otpController.dispose();
+    _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 }

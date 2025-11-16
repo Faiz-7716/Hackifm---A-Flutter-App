@@ -70,7 +70,10 @@ class SplashScreen extends StatelessWidget {
                       height: isSmallScreen ? 50 : 56,
                       child: ElevatedButton(
                         onPressed: () {
-                          Navigator.pushReplacementNamed(context, '/signup');
+                          Navigator.pushReplacementNamed(
+                            context,
+                            '/signup-new',
+                          );
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
