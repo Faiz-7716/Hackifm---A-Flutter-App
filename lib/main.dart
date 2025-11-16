@@ -7,6 +7,7 @@ import 'package:hackifm/screens/profile_screen.dart';
 import 'package:hackifm/screens/signup_screen.dart';
 import 'package:hackifm/screens/splash_screen.dart';
 import 'package:hackifm/screens/submit_opportunity_screen.dart';
+import 'package:hackifm/database/database_viewer.dart';
 
 void main() => runApp(const HackIFMApp());
 
@@ -46,6 +47,7 @@ class HackIFMApp extends StatelessWidget {
             const OpportunityListScreen(categoryName: 'Events'),
         '/submit': (context) => const SubmitOpportunityScreen(),
         '/profile': (context) => const ProfileScreen(),
+        '/database-viewer': (context) => const DatabaseViewerScreen(),
       },
     );
   }
