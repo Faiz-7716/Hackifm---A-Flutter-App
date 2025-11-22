@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hackifm/providers/auth_provider.dart';
+import 'package:hackifm/widgets/responsive_auth_wrapper.dart';
+import 'package:hackifm/utils/auth_colors.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -85,7 +87,7 @@ class _LoginPageState extends State<LoginPage> {
     final subtitleFontSize = isSmallScreen ? 12.0 : 14.0;
     final waveSize = isSmallScreen ? 100.0 : 120.0;
 
-    return Scaffold(
+    final mobileLayout = Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
         child: Center(
@@ -131,12 +133,11 @@ class _LoginPageState extends State<LoginPage> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFFE91E63), Color(0xFFF06292)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
+                            gradient: AuthColors.primaryGradient,
                             borderRadius: BorderRadius.circular(12),
+                            boxShadow: AuthColors.getElevationShadow(
+                              elevation: 6,
+                            ),
                           ),
                           child: Row(
                             children: [
@@ -226,7 +227,7 @@ class _LoginPageState extends State<LoginPage> {
                                     _rememberMe = value ?? false;
                                   });
                                 },
-                                activeColor: const Color(0xFFE91E63),
+                                activeColor: AuthColors.primary,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(4),
                                 ),
@@ -252,7 +253,7 @@ class _LoginPageState extends State<LoginPage> {
                                 'Forgot password?',
                                 style: TextStyle(
                                   fontSize: subtitleFontSize,
-                                  color: const Color(0xFFE91E63),
+                                  color: AuthColors.primary,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -350,10 +351,10 @@ class _LoginPageState extends State<LoginPage> {
                                       MaterialTapTargetSize.shrinkWrap,
                                 ),
                                 child: Text(
-                                  'Sign up',
+                                  'Sign Up',
                                   style: TextStyle(
                                     fontSize: subtitleFontSize,
-                                    color: const Color(0xFFE91E63),
+                                    color: AuthColors.primary,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -371,6 +372,13 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
       ),
+    );
+
+    return ResponsiveAuthWrapper(
+      title: 'Welcome to HackIFM',
+      subtitle: 'Hack Your Future with Innovation,\nInternships & Mastery',
+      icon: Icons.rocket_launch,
+      mobileContent: mobileLayout,
     );
   }
 
@@ -418,7 +426,7 @@ class TopRightWavePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFFE91E63).withOpacity(0.15)
+      ..color = AuthColors.primary.withOpacity(0.15)
       ..style = PaintingStyle.fill;
 
     final path = Path();
@@ -447,7 +455,7 @@ class LoginWavePainter extends CustomPainter {
       ..shader = const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [Color(0xFFE91E63), Color(0xFFF06292)],
+        colors: [Color(0xFF3B82F6), Color(0xFF60A5FA)],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 
     final path = Path();
@@ -479,8 +487,8 @@ class LoginWavePainter extends CustomPainter {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          const Color(0xFFEC407A).withOpacity(0.6),
-          const Color(0xFFF48FB1).withOpacity(0.6),
+          const Color(0xFF2563EB).withOpacity(0.6),
+          const Color(0xFF93C5FD).withOpacity(0.6),
         ],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hackifm/providers/auth_provider.dart';
+import 'package:hackifm/utils/auth_colors.dart';
+import 'package:hackifm/widgets/responsive_auth_wrapper.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -27,6 +29,66 @@ class _SignUpPageState extends State<SignUpPage> {
   bool _hasNumber = false;
   bool _hasSpecialChar = false;
   bool _hasMinLength = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController.addListener(_validateForm);
+    _emailController.addListener(_validateForm);
+    _passwordController.addListener(_validateForm);
+    _confirmPasswordController.addListener(_validateForm);
+  }
+
+  @override
+  void dispose() {
+    _nameController.removeListener(_validateForm);
+    _emailController.removeListener(_validateForm);
+    _passwordController.removeListener(_validateForm);
+    _confirmPasswordController.removeListener(_validateForm);
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  bool _isFormValid() {
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
+
+    // Name validation (at least 2 characters)
+    final isNameValid = name.length >= 2;
+
+    // Email validation
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    final isEmailValid = email.isNotEmpty && emailRegex.hasMatch(email);
+
+    // Password validation (must meet all requirements)
+    final isPasswordValid =
+        _hasUppercase &&
+        _hasLowercase &&
+        _hasNumber &&
+        _hasSpecialChar &&
+        _hasMinLength;
+
+    // Passwords match
+    final passwordsMatch = password == confirmPassword && password.isNotEmpty;
+
+    // Privacy policy agreement
+    final agreedToPolicy = _agreeToPolicy;
+
+    return isNameValid &&
+        isEmailValid &&
+        isPasswordValid &&
+        passwordsMatch &&
+        agreedToPolicy;
+  }
+
+  void _validateForm() {
+    setState(() {});
+  }
 
   Future<void> _handleSignup() async {
     final name = _nameController.text.trim();
@@ -116,7 +178,7 @@ class _SignUpPageState extends State<SignUpPage> {
     final subtitleFontSize = isSmallScreen ? 12.0 : 14.0;
     final waveSize = isSmallScreen ? 120.0 : 140.0;
 
-    return Scaffold(
+    final mobileLayout = Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
         child: Center(
@@ -162,12 +224,11 @@ class _SignUpPageState extends State<SignUpPage> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF5DADE2), Color(0xFF3498DB)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
+                            gradient: AuthColors.primaryGradient,
                             borderRadius: BorderRadius.circular(12),
+                            boxShadow: AuthColors.getElevationShadow(
+                              elevation: 6,
+                            ),
                           ),
                           child: Row(
                             children: [
@@ -299,7 +360,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                     _agreeToPolicy = value ?? false;
                                   });
                                 },
-                                activeColor: const Color(0xFF3498DB),
+                                activeColor: AuthColors.primary,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(4),
                                 ),
@@ -346,12 +407,14 @@ class _SignUpPageState extends State<SignUpPage> {
                                   width: double.infinity,
                                   height: isSmallScreen ? 48 : 56,
                                   child: ElevatedButton(
-                                    onPressed: _isLoading
+                                    onPressed: (_isLoading || !_isFormValid())
                                         ? null
                                         : _handleSignup,
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.white,
                                       foregroundColor: const Color(0xFF2D3142),
+                                      disabledBackgroundColor: Colors.grey[300],
+                                      disabledForegroundColor: Colors.grey[500],
                                       elevation: 0,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(28),
@@ -410,10 +473,10 @@ class _SignUpPageState extends State<SignUpPage> {
                                       MaterialTapTargetSize.shrinkWrap,
                                 ),
                                 child: Text(
-                                  'Sign in',
+                                  'Sign In',
                                   style: TextStyle(
                                     fontSize: subtitleFontSize,
-                                    color: const Color(0xFF3498DB),
+                                    color: AuthColors.primary,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -431,6 +494,14 @@ class _SignUpPageState extends State<SignUpPage> {
           ),
         ),
       ),
+    );
+
+    // Wrap with responsive wrapper for desktop layout
+    return ResponsiveAuthWrapper(
+      title: 'Join HackIFM',
+      subtitle: 'Start Your Journey with\nIdeas, Future & Mastery',
+      icon: Icons.lightbulb_outline,
+      mobileContent: mobileLayout,
     );
   }
 
@@ -582,15 +653,6 @@ class _SignUpPageState extends State<SignUpPage> {
       ),
     );
   }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
-    super.dispose();
-  }
 }
 
 // Top right wave decoration for signup
@@ -598,7 +660,7 @@ class TopRightWavePainterSignup extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF3498DB).withOpacity(0.15)
+      ..color = const Color(0xFF3B82F6).withOpacity(0.15)
       ..style = PaintingStyle.fill;
 
     final path = Path();
@@ -616,7 +678,7 @@ class TopRightWavePainterSignup extends CustomPainter {
 
     // Add a second layer for depth
     final paint2 = Paint()
-      ..color = const Color(0xFF5DADE2).withOpacity(0.1)
+      ..color = const Color(0xFF60A5FA).withOpacity(0.1)
       ..style = PaintingStyle.fill;
 
     final path2 = Path();
@@ -645,7 +707,7 @@ class SignupWavePainter extends CustomPainter {
       ..shader = const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [Color(0xFF3498DB), Color(0xFF5DADE2)],
+        colors: [Color(0xFF3B82F6), Color(0xFF60A5FA)],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 
     final path = Path();
@@ -677,8 +739,8 @@ class SignupWavePainter extends CustomPainter {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          const Color(0xFF2874A6).withOpacity(0.6),
-          const Color(0xFF5DADE2).withOpacity(0.6),
+          const Color(0xFF2563EB).withOpacity(0.6),
+          const Color(0xFF93C5FD).withOpacity(0.6),
         ],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 

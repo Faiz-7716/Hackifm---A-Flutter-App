@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import 'otp_verification_screen.dart';
+import '../../utils/auth_colors.dart';
 
 class NameEmailScreen extends StatefulWidget {
   const NameEmailScreen({Key? key}) : super(key: key);
@@ -218,12 +219,15 @@ class _NameEmailScreenState extends State<NameEmailScreen> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFFE91E63), Color(0xFFF06292)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
+                            gradient: AuthColors.primaryGradient,
                             borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AuthColors.primary.withOpacity(0.3),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
                           child: Row(
                             children: [
@@ -355,7 +359,7 @@ class _NameEmailScreenState extends State<NameEmailScreen> {
                           child: ElevatedButton(
                             onPressed: _isLoading ? null : _sendOTP,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFE91E63),
+                              backgroundColor: AuthColors.primary,
                               foregroundColor: Colors.white,
                               elevation: 0,
                               shape: RoundedRectangleBorder(
@@ -411,7 +415,7 @@ class _NameEmailScreenState extends State<NameEmailScreen> {
                                   'Login',
                                   style: TextStyle(
                                     fontSize: subtitleFontSize,
-                                    color: const Color(0xFFE91E63),
+                                    color: AuthColors.primary,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -455,7 +459,7 @@ class _NameEmailScreenState extends State<NameEmailScreen> {
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
-          prefixIcon: Icon(icon, size: 20, color: const Color(0xFFE91E63)),
+          prefixIcon: Icon(icon, size: 20, color: AuthColors.primary),
           suffixIcon: suffixIcon,
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
@@ -474,7 +478,7 @@ class TopRightWavePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..shader = const LinearGradient(
-        colors: [Color(0xFFE91E63), Color(0xFFF06292)],
+        colors: [Color(0xFF3B82F6), Color(0xFF60A5FA)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))

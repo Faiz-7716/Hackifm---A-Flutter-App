@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hackifm/services/api_service.dart';
 
 class AdminHomeScreen extends StatelessWidget {
   const AdminHomeScreen({super.key});
@@ -31,9 +32,19 @@ class AdminHomeScreen extends StatelessWidget {
                       child: const Text('Cancel'),
                     ),
                     TextButton(
-                      onPressed: () {
+                      onPressed: () async {
                         Navigator.pop(context);
-                        Navigator.pushReplacementNamed(context, '/admin-login');
+                        // Clear session via API
+                        final apiService = ApiService();
+                        await apiService.logout();
+                        // Redirect to splash screen
+                        if (context.mounted) {
+                          Navigator.pushNamedAndRemoveUntil(
+                            context,
+                            '/',
+                            (route) => false,
+                          );
+                        }
                       },
                       child: const Text('Logout'),
                     ),

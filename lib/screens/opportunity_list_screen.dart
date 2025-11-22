@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:hackifm/widgets/app_widgets.dart';
 
@@ -14,7 +13,8 @@ class OpportunityListScreen extends StatelessWidget {
       10,
       (index) => {
         'title': '$categoryName Opportunity ${index + 1}',
-        'description': 'This is a short description for the opportunity. More details will be available upon clicking.',
+        'description':
+            'This is a short description for the opportunity. More details will be available upon clicking.',
       },
     );
 
@@ -44,7 +44,11 @@ class OpportunityListScreen extends StatelessWidget {
                 children: [
                   Text(
                     opp['title']!,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -55,12 +59,19 @@ class OpportunityListScreen extends StatelessWidget {
                   Align(
                     alignment: Alignment.centerRight,
                     child: ElevatedButton(
-                      onPressed: () { /* Placeholder for Apply/Enroll */ },
+                      onPressed: () {
+                        /* Placeholder for Apply/Enroll */
+                      },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: neonGradient.colors[1],
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        backgroundColor: premiumPrimary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
-                      child: Text(categoryName == 'Courses' ? 'Enroll Now' : 'Apply Now', style: const TextStyle(color: Colors.white)),
+                      child: Text(
+                        categoryName == 'Courses' ? 'Enroll Now' : 'Apply Now',
+                        style: const TextStyle(color: Colors.white),
+                      ),
                     ),
                   ),
                 ],

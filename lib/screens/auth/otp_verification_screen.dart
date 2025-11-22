@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../utils/auth_colors.dart';
+import 'package:flutter/services.dart';
 import 'dart:async';
 import '../../services/api_service.dart';
 import 'set_password_screen.dart';
@@ -78,6 +80,29 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
       controller.clear();
     }
     _focusNodes[0].requestFocus();
+  }
+
+  void _handlePaste(String pastedText, int currentIndex) {
+    // Extract only digits from pasted text
+    final digits = pastedText.replaceAll(RegExp(r'[^0-9]'), '');
+
+    if (digits.isEmpty) return;
+
+    // Fill the OTP boxes starting from current index
+    for (int i = 0; i < digits.length && (currentIndex + i) < 6; i++) {
+      _otpControllers[currentIndex + i].text = digits[i];
+    }
+
+    // Move focus to the last filled box or verify if complete
+    final lastFilledIndex = (currentIndex + digits.length - 1).clamp(0, 5);
+    if (lastFilledIndex == 5 && _getOTP().length == 6) {
+      _focusNodes[5].unfocus();
+      _verifyOTP();
+    } else {
+      _focusNodes[lastFilledIndex].requestFocus();
+    }
+
+    setState(() {});
   }
 
   Future<void> _verifyOTP() async {
@@ -273,12 +298,15 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFFE91E63), Color(0xFFF06292)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
+                            gradient: AuthColors.primaryGradient,
                             borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AuthColors.primary.withOpacity(0.3),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
                           child: Row(
                             children: [
@@ -344,7 +372,37 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                             (index) => _buildOTPBox(index),
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 12),
+
+                        // Paste from clipboard button
+                        Center(
+                          child: TextButton.icon(
+                            onPressed: _isLoading
+                                ? null
+                                : () async {
+                                    final clipboardData =
+                                        await Clipboard.getData(
+                                          Clipboard.kTextPlain,
+                                        );
+                                    if (clipboardData?.text != null) {
+                                      _handlePaste(clipboardData!.text!, 0);
+                                    }
+                                  },
+                            icon: Icon(
+                              Icons.content_paste,
+                              size: 16,
+                              color: AuthColors.primary,
+                            ),
+                            label: Text(
+                              'Paste OTP',
+                              style: TextStyle(
+                                color: AuthColors.primary,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
 
                         // Attempts remaining indicator
                         if (_attemptsRemaining != null && !_isLocked) ...[
@@ -426,7 +484,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                                 ? null
                                 : _verifyOTP,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFE91E63),
+                              backgroundColor: AuthColors.primary,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -461,7 +519,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                                   child: const Text(
                                     'Resend OTP',
                                     style: TextStyle(
-                                      color: Color(0xFFE91E63),
+                                      color: AuthColors.primary,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -482,7 +540,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                             onPressed: () => Navigator.pop(context),
                             child: const Text(
                               'Change Email',
-                              style: TextStyle(color: Color(0xFFE91E63)),
+                              style: TextStyle(color: AuthColors.primary),
                             ),
                           ),
                         ),
@@ -505,7 +563,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
       decoration: BoxDecoration(
         border: Border.all(
           color: _otpControllers[index].text.isNotEmpty
-              ? const Color(0xFFE91E63)
+              ? AuthColors.primary
               : Colors.grey[300]!,
           width: 2,
         ),
@@ -517,16 +575,23 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
         textAlign: TextAlign.center,
         keyboardType: TextInputType.number,
         maxLength: 1,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.bold,
-          color: Color(0xFFE91E63),
+          color: AuthColors.primary,
         ),
         decoration: const InputDecoration(
           counterText: '',
           border: InputBorder.none,
         ),
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         onChanged: (value) {
+          // Handle paste - if more than 1 character, it's a paste
+          if (value.length > 1) {
+            _handlePaste(value, index);
+            return;
+          }
+
           if (value.isNotEmpty) {
             if (index < 5) {
               _focusNodes[index + 1].requestFocus();
@@ -552,7 +617,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
           height: 40,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: isActive ? const Color(0xFFE91E63) : Colors.grey[300],
+            color: isActive ? AuthColors.primary : Colors.grey[300],
           ),
           child: Center(
             child: Text(
@@ -593,7 +658,7 @@ class TopRightWavePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..shader = const LinearGradient(
-        colors: [Color(0xFFE91E63), Color(0xFFF06292)],
+        colors: [Color(0xFF3B82F6), Color(0xFF60A5FA)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))

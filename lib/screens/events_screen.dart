@@ -737,33 +737,133 @@ class _EventsScreenState extends State<EventsScreen>
     );
   }
 
+  void _showFilters() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.tune, color: Color(0xFF3498DB)),
+                SizedBox(width: 12),
+                Text(
+                  'Filter Events',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Event Type',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children:
+                  [
+                    'All',
+                    'Workshop',
+                    'Competition',
+                    'Career Fair',
+                    'Conference',
+                    'Bootcamp',
+                  ].map((type) {
+                    return FilterChip(
+                      label: Text(type),
+                      selected: _selectedFilter == type,
+                      selectedColor: const Color(0xFF3498DB).withOpacity(0.2),
+                      checkmarkColor: const Color(0xFF3498DB),
+                      backgroundColor: Colors.grey[100],
+                      onSelected: (selected) {
+                        setState(() {
+                          _selectedFilter = selected ? type : 'All';
+                        });
+                      },
+                    );
+                  }).toList(),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      setState(() {
+                        _selectedFilter = 'All';
+                      });
+                      Navigator.pop(context);
+                    },
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      side: BorderSide(color: Colors.grey[300]!),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Clear'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF3498DB),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Apply'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: const Text('Events'),
         backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF2D3142),
-        elevation: 0,
+        foregroundColor: Colors.black87,
+        elevation: 1,
         actions: [
           IconButton(
-            icon: const Icon(Icons.calendar_month),
-            onPressed: () {},
-            tooltip: 'View Calendar',
-          ),
-          IconButton(
             icon: const Icon(Icons.filter_list),
-            onPressed: () {
-              // Show filter options
-            },
-            tooltip: 'Filters',
+            onPressed: _showFilters,
           ),
         ],
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: const Color(0xFFE91E63),
-          labelColor: const Color(0xFFE91E63),
+          indicatorColor: const Color(0xFF3498DB),
+          labelColor: const Color(0xFF3498DB),
           unselectedLabelColor: Colors.grey,
           labelStyle: const TextStyle(fontWeight: FontWeight.bold),
           tabs: const [

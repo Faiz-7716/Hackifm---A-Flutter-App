@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../utils/auth_colors.dart';
 import 'package:hackifm/services/api_service.dart';
+import 'package:hackifm/widgets/responsive_auth_wrapper.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -37,7 +39,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final subtitleFontSize = isSmallScreen ? 12.0 : 14.0;
     final waveSize = isSmallScreen ? 100.0 : 120.0;
 
-    return Scaffold(
+    final mobileLayout = Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
         child: Center(
@@ -275,7 +277,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                   'Sign in',
                                   style: TextStyle(
                                     fontSize: subtitleFontSize,
-                                    color: const Color(0xFF3498DB),
+                                    color: AuthColors.primary,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -293,6 +295,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
         ),
       ),
+    );
+
+    // Wrap with responsive wrapper for desktop layout
+    return ResponsiveAuthWrapper(
+      title: 'Reset Password',
+      subtitle: 'Enter your email to receive\na password reset link',
+      icon: Icons.lock_reset,
+      mobileContent: mobileLayout,
     );
   }
 
@@ -476,7 +486,7 @@ class TopRightWavePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF3498DB).withOpacity(0.15)
+      ..color = AuthColors.primary.withOpacity(0.15)
       ..style = PaintingStyle.fill;
 
     final path = Path();
@@ -505,7 +515,7 @@ class ForgotPasswordWavePainter extends CustomPainter {
       ..shader = const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [Color(0xFF3498DB), Color(0xFF5DADE2)],
+        colors: [Color(0xFF3B82F6), Color(0xFF60A5FA)],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 
     final path = Path();
@@ -538,7 +548,7 @@ class ForgotPasswordWavePainter extends CustomPainter {
         end: Alignment.bottomRight,
         colors: [
           const Color(0xFF2874A6).withOpacity(0.6),
-          const Color(0xFF5DADE2).withOpacity(0.6),
+          const Color(0xFF93C5FD).withOpacity(0.6),
         ],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 

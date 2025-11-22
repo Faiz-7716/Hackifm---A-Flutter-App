@@ -1,13 +1,8 @@
-
 import 'package:flutter/material.dart';
 
-// Shared gradient & styles
-final Gradient neonGradient = const LinearGradient(
-  colors: [Color(0xFF3AB7FF), Color(0xFF8C6CFF), Color(0xFFFF6BBA)],
-  begin: Alignment.topLeft,
-  end: Alignment.bottomRight,
-);
-
+// Shared premium colors & styles
+const Color premiumPrimary = Color(0xFF3B82F6); // Vibrant Blue
+const Color premiumAccent = Color(0xFF60A5FA); // Lighter Blue
 const double radiusCard = 20.0;
 
 // --- Animated Gradient Text Logo ---
@@ -37,13 +32,8 @@ class _GradientLogoState extends State<GradientLogo>
     return AnimatedBuilder(
       animation: _ctrl,
       builder: (context, child) {
-        return ShaderMask(
-          shaderCallback: (rect) {
-            return neonGradient.createShader(Rect.fromLTWH(
-                -rect.width * _ctrl.value, 0, rect.width * 2, rect.height));
-          },
-          child: child,
-        );
+        final opacity = 0.85 + (_ctrl.value * 0.15);
+        return Opacity(opacity: opacity, child: child);
       },
       child: Text(
         'hackIFM',
@@ -51,7 +41,14 @@ class _GradientLogoState extends State<GradientLogo>
           fontSize: widget.size,
           fontWeight: FontWeight.w800,
           letterSpacing: 1.2,
-          color: Colors.white,
+          color: premiumPrimary,
+          shadows: [
+            Shadow(
+              color: premiumPrimary.withOpacity(0.4),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
       ),
     );
@@ -65,14 +62,16 @@ class GlowPainter extends CustomPainter {
     final center = Offset(size.width * 0.2, size.height * 0.2);
     final center2 = Offset(size.width * 0.85, size.height * 0.75);
 
-    final g1 = RadialGradient(colors: [const Color(0xFF3AB7FF).withOpacity(0.16), Colors.transparent]);
-    final g2 = RadialGradient(colors: [const Color(0xFFFF6BBA).withOpacity(0.10), Colors.transparent]);
+    final paint1 = Paint()
+      ..color = premiumPrimary.withOpacity(0.08)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 80);
 
-    final r1 = Rect.fromCircle(center: center, radius: size.width * 0.6);
-    final r2 = Rect.fromCircle(center: center2, radius: size.width * 0.5);
+    final paint2 = Paint()
+      ..color = premiumAccent.withOpacity(0.06)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 60);
 
-    canvas.drawRect(r1, Paint()..shader = g1.createShader(r1));
-    canvas.drawRect(r2, Paint()..shader = g2.createShader(r2));
+    canvas.drawCircle(center, size.width * 0.3, paint1);
+    canvas.drawCircle(center2, size.width * 0.25, paint2);
   }
 
   @override
@@ -89,8 +88,12 @@ class NeonButton extends StatefulWidget {
   State<NeonButton> createState() => _NeonButtonState();
 }
 
-class _NeonButtonState extends State<NeonButton> with SingleTickerProviderStateMixin {
-  late final AnimationController _ani = AnimationController(vsync: this, duration: const Duration(milliseconds: 150));
+class _NeonButtonState extends State<NeonButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ani = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 150),
+  );
 
   @override
   void dispose() {
@@ -113,15 +116,23 @@ class _NeonButtonState extends State<NeonButton> with SingleTickerProviderStateM
           final t = _ani.value;
           return Container(
             decoration: BoxDecoration(
-              gradient: neonGradient,
+              color: premiumPrimary,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
-                BoxShadow(color: const Color(0xFF3AB7FF).withOpacity(0.12 + t * 0.2), blurRadius: 24 + t * 8, offset: const Offset(0, 12)),
-                BoxShadow(color: const Color(0xFFFF6BBA).withOpacity(0.06 + t * 0.12), blurRadius: 12 + t * 6, offset: const Offset(0, 6)),
+                BoxShadow(
+                  color: premiumPrimary.withOpacity(0.3 + t * 0.2),
+                  blurRadius: 20 + t * 8,
+                  offset: Offset(0, 8 + t * 4),
+                ),
               ],
             ),
             padding: const EdgeInsets.symmetric(vertical: 14),
-            child: Center(child: Text(widget.label, style: const TextStyle(fontWeight: FontWeight.w700))),
+            child: Center(
+              child: Text(
+                widget.label,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
           );
         },
       ),
@@ -136,7 +147,13 @@ class NeonTextField extends StatelessWidget {
   final bool obscure;
   final Widget? suffix;
 
-  const NeonTextField({super.key, required this.controller, required this.hint, this.obscure = false, this.suffix});
+  const NeonTextField({
+    super.key,
+    required this.controller,
+    required this.hint,
+    this.obscure = false,
+    this.suffix,
+  });
 
   @override
   Widget build(BuildContext context) {

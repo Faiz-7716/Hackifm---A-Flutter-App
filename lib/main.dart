@@ -11,6 +11,7 @@ import 'package:hackifm/screens/auth/name_email_screen.dart';
 import 'package:hackifm/screens/splash_screen.dart';
 import 'package:hackifm/screens/account_type_selection_screen.dart';
 import 'package:hackifm/screens/login_activity_screen.dart';
+import 'package:hackifm/screens/onboarding/onboarding_screen.dart';
 import 'package:hackifm/screens/events_screen.dart';
 import 'package:hackifm/screens/courses_screen.dart';
 import 'package:hackifm/screens/submit_opportunity_screen.dart';
@@ -45,8 +46,30 @@ class HackIFMApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Hackifm',
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: const Color(0xFF05060A),
+      themeMode: ThemeMode.system,
+      theme: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.light,
+        primaryColor: const Color(0xFF3B82F6),
+        scaffoldBackgroundColor: Colors.white,
+        colorScheme: const ColorScheme.light(
+          primary: Color(0xFF3B82F6),
+          secondary: Color(0xFF60A5FA),
+          surface: Color(0xFFF8FAFC),
+          error: Color(0xFFEF4444),
+        ),
+      ),
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.dark,
+        primaryColor: const Color(0xFF3B82F6),
+        scaffoldBackgroundColor: const Color(0xFF0F172A),
+        colorScheme: const ColorScheme.dark(
+          primary: Color(0xFF3B82F6),
+          secondary: Color(0xFF60A5FA),
+          surface: Color(0xFF1E293B),
+          error: Color(0xFFEF4444),
+        ),
         splashColor: Colors.transparent,
         highlightColor: Colors.transparent,
       ),
@@ -54,6 +77,7 @@ class HackIFMApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),
+        '/onboarding': (context) => const OnboardingScreen(),
         '/home': (context) =>
             const HomeScreen(), // Root route after splash/auth (use '/home' because `home` is specified)
         '/login': (context) => const LoginPage(),

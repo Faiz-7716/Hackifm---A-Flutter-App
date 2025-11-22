@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hackifm/database/database_helper.dart';
+import 'package:hackifm/services/api_service.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   final String sessionToken;
@@ -96,9 +97,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.of(context).pop();
-              Navigator.of(context).pushReplacementNamed('/home');
+              // Clear session via API
+              final apiService = ApiService();
+              await apiService.logout();
+              // Redirect to splash screen
+              if (context.mounted) {
+                Navigator.of(
+                  context,
+                ).pushNamedAndRemoveUntil('/', (route) => false);
+              }
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Logout', style: TextStyle(color: Colors.white)),
@@ -121,9 +130,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final isMediumScreen = size.width >= 600 && size.width < 1024;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E21),
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1E1E2E),
+        backgroundColor: const Color(0xFF3498DB),
         elevation: 0,
         title: Row(
           children: [
@@ -383,7 +392,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF1E1E2E),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: color.withOpacity(0.3)),
           boxShadow: [
@@ -447,12 +456,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E2E),
+        backgroundColor: Colors.white,
         title: const Row(
           children: [
             Icon(Icons.info, color: Color(0xFF3498DB)),
             SizedBox(width: 12),
-            Text('System Information', style: TextStyle(color: Colors.white)),
+            Text('System Information', style: TextStyle(color: Colors.black87)),
           ],
         ),
         content: Column(
@@ -510,17 +519,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E2E),
+        backgroundColor: Colors.white,
         title: const Row(
           children: [
             Icon(Icons.warning, color: Colors.orange),
             SizedBox(width: 12),
-            Text('Clear Cache', style: TextStyle(color: Colors.white)),
+            Text('Clear Cache', style: TextStyle(color: Colors.black87)),
           ],
         ),
         content: const Text(
           'This will clear all temporary data. Continue?',
-          style: TextStyle(color: Colors.white70),
+          style: TextStyle(color: Colors.black87),
         ),
         actions: [
           TextButton(
@@ -548,12 +557,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E2E),
+        backgroundColor: Colors.white,
         title: const Row(
           children: [
             Icon(Icons.security, color: Colors.green),
             SizedBox(width: 12),
-            Text('Security Logs', style: TextStyle(color: Colors.white)),
+            Text('Security Logs', style: TextStyle(color: Colors.black87)),
           ],
         ),
         content: const Column(

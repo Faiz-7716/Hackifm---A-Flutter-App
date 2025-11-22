@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/auth_colors.dart';
 import '../../services/api_service.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
@@ -32,10 +33,41 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
   bool _hasSpecialChar = false;
 
   @override
+  void initState() {
+    super.initState();
+    _passwordController.addListener(_validateForm);
+    _confirmPasswordController.addListener(_validateForm);
+  }
+
+  @override
   void dispose() {
+    _passwordController.removeListener(_validateForm);
+    _confirmPasswordController.removeListener(_validateForm);
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  void _validateForm() {
+    setState(() {});
+  }
+
+  bool _isFormValid() {
+    final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
+
+    // All password requirements must be met
+    final isPasswordStrong =
+        _hasMinLength &&
+        _hasUppercase &&
+        _hasLowercase &&
+        _hasNumber &&
+        _hasSpecialChar;
+
+    // Passwords must match
+    final passwordsMatch = password == confirmPassword && password.isNotEmpty;
+
+    return isPasswordStrong && passwordsMatch;
   }
 
   void _checkPasswordStrength(String password) {
@@ -188,12 +220,17 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFFE91E63), Color(0xFF06292)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
+                              gradient: AuthColors.primaryGradient,
                               borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(
+                                    0xFF10B981,
+                                  ).withOpacity(0.2),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                             ),
                             child: Row(
                               children: [
@@ -346,10 +383,14 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                             width: double.infinity,
                             height: 50,
                             child: ElevatedButton(
-                              onPressed: _isLoading ? null : _createAccount,
+                              onPressed: (_isLoading || !_isFormValid())
+                                  ? null
+                                  : _createAccount,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFE91E63),
+                                backgroundColor: AuthColors.primary,
                                 foregroundColor: Colors.white,
+                                disabledBackgroundColor: Colors.grey[300],
+                                disabledForegroundColor: Colors.grey[500],
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
@@ -417,7 +458,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
           height: 40,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: isActive ? const Color(0xFFE91E63) : Colors.grey[300],
+            color: isActive ? AuthColors.primary : Colors.grey[300],
           ),
           child: Center(
             child: Text(
@@ -475,7 +516,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
-          prefixIcon: Icon(icon, size: 20, color: const Color(0xFFE91E63)),
+          prefixIcon: Icon(icon, size: 20, color: AuthColors.primary),
           suffixIcon: suffixIcon,
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
@@ -494,7 +535,7 @@ class TopRightWavePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..shader = const LinearGradient(
-        colors: [Color(0xFFE91E63), Color(0xFFF06292)],
+        colors: [Color(0xFF3B82F6), Color(0xFF60A5FA)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
