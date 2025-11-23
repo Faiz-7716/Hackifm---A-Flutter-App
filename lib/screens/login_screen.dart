@@ -670,7 +670,6 @@ class _LoginPageState extends State<LoginPage> {
 
 // Top right wave decoration
 
-
 class TopRightWavePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
