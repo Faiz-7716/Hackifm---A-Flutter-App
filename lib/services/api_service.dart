@@ -7,7 +7,7 @@ class ApiService {
   // For local testing on Chrome/web: Use your computer's IP address
   // For Android emulator: Use http://10.0.2.2:5000
   // For physical Android device: Use http://YOUR_COMPUTER_IP:5000
-  static const String baseUrl = 'http://192.168.29.2:5000';
+  static const String baseUrl = 'http://127.0.0.1:5000';
 
   final storage = const FlutterSecureStorage();
 

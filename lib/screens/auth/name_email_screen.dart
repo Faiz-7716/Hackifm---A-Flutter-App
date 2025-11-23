@@ -204,13 +204,12 @@ class _NameEmailScreenState extends State<NameEmailScreen> {
           ),
           // Form content
           Expanded(
-            child: Padding(
+            child: SingleChildScrollView(
               padding: EdgeInsets.symmetric(
                 horizontal: contentPadding,
                 vertical: isSmallScreen ? 12.0 : 16.0,
               ),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Title
@@ -370,16 +369,6 @@ class _NameEmailScreenState extends State<NameEmailScreen> {
                           ),
                         ),
                       ],
-                    ),
-                  ),
-
-                  // Bottom wave decoration
-                  Container(
-                    width: double.infinity,
-                    height: 150,
-                    child: CustomPaint(
-                      size: Size(MediaQuery.of(context).size.width, 150),
-                      painter: BottomWavePainter(),
                     ),
                   ),
                 ], // Closes children of Column
