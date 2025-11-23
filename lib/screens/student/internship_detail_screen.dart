@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../models/comprehensive_models.dart';
+import '../../models/section_config.dart';
+import '../../models/chip_config.dart';
 import '../../services/api_service.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -19,10 +21,34 @@ class _InternshipDetailScreenState extends State<InternshipDetailScreen> {
   bool isSaved = false;
   bool hasApplied = false;
 
+  // Dynamic configurations
+  List<SectionConfig> _sections = [];
+  List<ChipConfig> _chips = [];
+  bool _configLoading = true;
+
   @override
   void initState() {
     super.initState();
+    _loadConfigurations();
     _incrementViewCount();
+  }
+
+  Future<void> _loadConfigurations() async {
+    try {
+      final sectionsData = await _apiService.getSectionConfigurations();
+      final chipsData = await _apiService.getChipConfigurations();
+
+      setState(() {
+        _sections = sectionsData
+            .map((json) => SectionConfig.fromJson(json))
+            .toList();
+        _chips = chipsData.map((json) => ChipConfig.fromJson(json)).toList();
+        _configLoading = false;
+      });
+    } catch (e) {
+      print('Error loading configurations: $e');
+      setState(() => _configLoading = false);
+    }
   }
 
   Future<void> _incrementViewCount() async {
@@ -50,28 +76,18 @@ class _InternshipDetailScreenState extends State<InternshipDetailScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            _buildBasicInfo(),
-            const Divider(height: 32),
-            _buildSkillsSection(),
-            const Divider(height: 32),
-            _buildEligibilitySection(),
-            const Divider(height: 32),
-            _buildDescriptionSection(),
-            const Divider(height: 32),
-            _buildApplicationSection(),
-            const Divider(height: 32),
-            _buildAnalytics(),
-            const Divider(height: 32),
-            _buildCompanyInfo(),
-            const SizedBox(height: 80), // Space for FAB
-          ],
-        ),
-      ),
+      body: _configLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(),
+                  ..._buildDynamicSections(),
+                  const SizedBox(height: 80), // Space for FAB
+                ],
+              ),
+            ),
       bottomNavigationBar: _buildBottomBar(),
     );
   }
@@ -167,6 +183,533 @@ class _InternshipDetailScreenState extends State<InternshipDetailScreen> {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildDynamicSections() {
+    final widgets = <Widget>[];
+
+    for (final section in _sections) {
+      // Build the appropriate section based on section_key
+      Widget? sectionWidget;
+
+      switch (section.sectionKey) {
+        case 'basic_info':
+          sectionWidget = _buildBasicInfoDynamic(section);
+          break;
+        case 'skills':
+          sectionWidget = _buildSkillsSectionDynamic(section);
+          break;
+        case 'eligibility':
+          sectionWidget = _buildEligibilitySectionDynamic(section);
+          break;
+        case 'description':
+          sectionWidget = _buildDescriptionSectionDynamic(section);
+          break;
+        case 'application':
+          sectionWidget = _buildApplicationSectionDynamic(section);
+          break;
+        case 'analytics':
+          sectionWidget = _buildAnalyticsDynamic(section);
+          break;
+        case 'company':
+          sectionWidget = _buildCompanyInfoDynamic(section);
+          break;
+      }
+
+      if (sectionWidget != null) {
+        widgets.add(sectionWidget);
+        widgets.add(const Divider(height: 32));
+      }
+    }
+
+    return widgets;
+  }
+
+  Widget _buildBasicInfoDynamic(SectionConfig config) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(config.icon, color: config.colorValue, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                config.title,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: config.colorValue,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: _chips.map((chip) {
+              String? value;
+              switch (chip.chipKey) {
+                case 'work_type':
+                  value = widget.internship.workType;
+                  break;
+                case 'duration':
+                  value = widget.internship.duration;
+                  break;
+                case 'internship_type':
+                  value = widget.internship.internshipType;
+                  break;
+                case 'stipend':
+                  value = widget.internship.isPaid
+                      ? '₹${widget.internship.stipendMin}-${widget.internship.stipendMax}/month'
+                      : 'Unpaid';
+                  break;
+                case 'experience_level':
+                  value = widget.internship.experienceLevel;
+                  break;
+                case 'category':
+                  value = widget.internship.category;
+                  break;
+              }
+
+              if (value == null || value.isEmpty)
+                return const SizedBox.shrink();
+
+              return _buildInfoChipDynamic(chip, value);
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoChipDynamic(ChipConfig chip, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: chip.colorValue.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: chip.colorValue.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(chip.icon, size: 18, color: chip.colorValue),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                chip.label,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: chip.colorValue.withOpacity(0.7),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: chip.colorValue,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSkillsSectionDynamic(SectionConfig config) {
+    if (widget.internship.skillsRequired == null ||
+        widget.internship.skillsRequired!.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final skills = widget.internship.skillsRequired!.split(',');
+
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(config.icon, color: config.colorValue, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                config.title,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: config.colorValue,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: skills.map((skill) {
+              return Chip(
+                label: Text(skill.trim()),
+                backgroundColor: config.colorValue.withOpacity(0.1),
+                labelStyle: TextStyle(color: config.colorValue),
+                side: BorderSide(color: config.colorValue.withOpacity(0.3)),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEligibilitySectionDynamic(SectionConfig config) {
+    if (widget.internship.eligibility == null ||
+        widget.internship.eligibility!.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(config.icon, color: config.colorValue, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                config.title,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: config.colorValue,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: config.colorValue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: config.colorValue.withOpacity(0.3)),
+            ),
+            child: Text(
+              widget.internship.eligibility!,
+              style: TextStyle(
+                fontSize: 15,
+                height: 1.6,
+                color: Colors.grey[800],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDescriptionSectionDynamic(SectionConfig config) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(config.icon, color: config.colorValue, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                config.title,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: config.colorValue,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (widget.internship.description != null &&
+              widget.internship.description!.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                widget.internship.description!,
+                style: TextStyle(
+                  fontSize: 15,
+                  height: 1.6,
+                  color: Colors.grey[800],
+                ),
+              ),
+            ),
+          if (widget.internship.responsibilities != null &&
+              widget.internship.responsibilities!.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Text(
+              'Responsibilities',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: config.colorValue,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              widget.internship.responsibilities!,
+              style: TextStyle(
+                fontSize: 15,
+                height: 1.6,
+                color: Colors.grey[800],
+              ),
+            ),
+          ],
+          if (widget.internship.whatYouWillLearn != null &&
+              widget.internship.whatYouWillLearn!.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Text(
+              'What You Will Learn',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: config.colorValue,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              widget.internship.whatYouWillLearn!,
+              style: TextStyle(
+                fontSize: 15,
+                height: 1.6,
+                color: Colors.grey[800],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildApplicationSectionDynamic(SectionConfig config) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(config.icon, color: config.colorValue, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                config.title,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: config.colorValue,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (widget.internship.applicationDeadline != null)
+            _buildDetailRowDynamic(
+              'Application Deadline',
+              widget.internship.applicationDeadline!,
+              config.colorValue,
+            ),
+          const SizedBox(height: 12),
+          _buildDetailRowDynamic(
+            'Application Method',
+            widget.internship.applyThroughPlatform == true
+                ? 'Apply through HackIFM'
+                : 'External Application',
+            config.colorValue,
+          ),
+          if (widget.internship.applyLink != null &&
+              widget.internship.applyLink!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              onPressed: () => _launchURL(widget.internship.applyLink!),
+              icon: const Icon(Icons.open_in_new),
+              label: const Text('Visit Application Link'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: config.colorValue,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAnalyticsDynamic(SectionConfig config) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(config.icon, color: config.colorValue, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                config.title,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: config.colorValue,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildStatCardDynamic(
+                'Views',
+                widget.internship.viewsCount?.toString() ?? '0',
+                Icons.visibility,
+                config.colorValue,
+              ),
+              _buildStatCardDynamic(
+                'Clicks',
+                widget.internship.clicksCount?.toString() ?? '0',
+                Icons.touch_app,
+                config.colorValue,
+              ),
+              _buildStatCardDynamic(
+                'Applied',
+                widget.internship.appliedCount?.toString() ?? '0',
+                Icons.how_to_reg,
+                config.colorValue,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompanyInfoDynamic(SectionConfig config) {
+    if (widget.internship.companyDescription == null ||
+        widget.internship.companyDescription!.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(config.icon, color: config.colorValue, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                config.title,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: config.colorValue,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: config.colorValue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: config.colorValue.withOpacity(0.3)),
+            ),
+            child: Text(
+              widget.internship.companyDescription!,
+              style: TextStyle(
+                fontSize: 15,
+                height: 1.6,
+                color: Colors.grey[800],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRowDynamic(String label, String value, Color color) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          flex: 2,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        Expanded(
+          flex: 3,
+          child: Text(
+            value,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatCardDynamic(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 28),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
         ],
       ),
     );

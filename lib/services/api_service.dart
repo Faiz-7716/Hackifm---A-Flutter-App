@@ -1103,6 +1103,119 @@ class ApiService {
     }
   }
 
+  // ==================== INTERNSHIP CONFIGURATION APIs ====================
+
+  /// Get section configurations for internship detail page
+  Future<List<dynamic>> getSectionConfigurations() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/internship-sections'),
+      );
+
+      final data = jsonDecode(response.body);
+      if (data['success'] == true && data['sections'] != null) {
+        return data['sections'] as List<dynamic>;
+      }
+      return [];
+    } catch (e) {
+      print('Error loading section configurations: $e');
+      return [];
+    }
+  }
+
+  /// Get info chip configurations for basic info section
+  Future<List<dynamic>> getChipConfigurations() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/internship-info-chips'),
+      );
+
+      final data = jsonDecode(response.body);
+      if (data['success'] == true && data['chips'] != null) {
+        return data['chips'] as List<dynamic>;
+      }
+      return [];
+    } catch (e) {
+      print('Error loading chip configurations: $e');
+      return [];
+    }
+  }
+
+  /// Update section configuration (Admin only)
+  Future<Map<String, dynamic>> updateSectionConfig(
+    int id,
+    Map<String, dynamic> configData,
+  ) async {
+    try {
+      final token = await _getToken();
+      if (token == null) {
+        return {'success': false, 'message': 'Not authenticated'};
+      }
+
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/internship-sections/$id'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(configData),
+      );
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  /// Update chip configuration (Admin only)
+  Future<Map<String, dynamic>> updateChipConfig(
+    int id,
+    Map<String, dynamic> configData,
+  ) async {
+    try {
+      final token = await _getToken();
+      if (token == null) {
+        return {'success': false, 'message': 'Not authenticated'};
+      }
+
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/internship-info-chips/$id'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(configData),
+      );
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  /// Reorder sections (Admin only)
+  Future<Map<String, dynamic>> reorderSections(List<int> sectionOrder) async {
+    try {
+      final token = await _getToken();
+      if (token == null) {
+        return {'success': false, 'message': 'Not authenticated'};
+      }
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/internship-sections/reorder'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'section_order': sectionOrder}),
+      );
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
   // ==================== COURSE APIs ====================
 
   /// Get all courses with optional filters

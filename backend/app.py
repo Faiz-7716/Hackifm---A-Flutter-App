@@ -290,6 +290,62 @@ class Internship(db.Model):
         }
 
 
+class InternshipDetailSection(db.Model):
+    """Configuration for internship detail page sections"""
+    __tablename__ = 'internship_detail_sections'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    section_key = db.Column(db.String(50), unique=True, nullable=False)  # 'basic_info', 'skills', etc.
+    title = db.Column(db.String(100), nullable=False)  # Display title
+    icon_name = db.Column(db.String(50), nullable=False)  # Material icon name
+    color = db.Column(db.String(20), nullable=False)  # Hex color code
+    display_order = db.Column(db.Integer, default=0)
+    is_enabled = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'section_key': self.section_key,
+            'title': self.title,
+            'icon_name': self.icon_name,
+            'color': self.color,
+            'display_order': self.display_order,
+            'is_enabled': self.is_enabled,
+            'created_at': self.created_at.isoformat(),
+            'updated_at': self.updated_at.isoformat()
+        }
+
+
+class InternshipInfoChip(db.Model):
+    """Configuration for info chips in basic info section"""
+    __tablename__ = 'internship_info_chips'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    chip_key = db.Column(db.String(50), unique=True, nullable=False)  # 'work_type', 'duration', etc.
+    label = db.Column(db.String(50), nullable=False)  # Display label
+    icon_name = db.Column(db.String(50), nullable=False)  # Material icon name
+    color = db.Column(db.String(20), nullable=False)  # Hex color code
+    display_order = db.Column(db.Integer, default=0)
+    is_enabled = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'chip_key': self.chip_key,
+            'label': self.label,
+            'icon_name': self.icon_name,
+            'color': self.color,
+            'display_order': self.display_order,
+            'is_enabled': self.is_enabled,
+            'created_at': self.created_at.isoformat(),
+            'updated_at': self.updated_at.isoformat()
+        }
+
+
 class Course(db.Model):
     __tablename__ = 'courses'
     
@@ -2524,6 +2580,184 @@ def report_internship(id):
             'success': True,
             'message': 'Report submitted successfully'
         }), 201
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+# ==================== INTERNSHIP CONFIGURATION APIs ====================
+
+@app.route('/api/internship-sections', methods=['GET'])
+def get_internship_sections():
+    """Get all internship detail section configurations"""
+    try:
+        sections = InternshipDetailSection.query.filter_by(is_enabled=True).order_by(
+            InternshipDetailSection.display_order
+        ).all()
+        
+        return jsonify({
+            'success': True,
+            'sections': [{
+                'id': s.id,
+                'section_key': s.section_key,
+                'title': s.title,
+                'icon_name': s.icon_name,
+                'color': s.color,
+                'display_order': s.display_order,
+                'is_enabled': s.is_enabled
+            } for s in sections]
+        }), 200
+    
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route('/api/internship-sections/<int:id>', methods=['PUT'])
+@jwt_required()
+def update_internship_section(id):
+    """Update internship section configuration (Admin only)"""
+    try:
+        current_user_id = get_jwt_identity()
+        user = User.query.get(current_user_id)
+        
+        if not user or user.role != 'admin':
+            return jsonify({'success': False, 'message': 'Admin access required'}), 403
+        
+        section = InternshipDetailSection.query.get_or_404(id)
+        data = request.get_json()
+        
+        if 'title' in data:
+            section.title = data['title']
+        if 'icon_name' in data:
+            section.icon_name = data['icon_name']
+        if 'color' in data:
+            section.color = data['color']
+        if 'is_enabled' in data:
+            section.is_enabled = data['is_enabled']
+        if 'display_order' in data:
+            section.display_order = data['display_order']
+        
+        section.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Section updated successfully',
+            'section': {
+                'id': section.id,
+                'section_key': section.section_key,
+                'title': section.title,
+                'icon_name': section.icon_name,
+                'color': section.color,
+                'display_order': section.display_order,
+                'is_enabled': section.is_enabled
+            }
+        }), 200
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route('/api/internship-sections/reorder', methods=['POST'])
+@jwt_required()
+def reorder_internship_sections():
+    """Reorder internship sections (Admin only)"""
+    try:
+        current_user_id = get_jwt_identity()
+        user = User.query.get(current_user_id)
+        
+        if not user or user.role != 'admin':
+            return jsonify({'success': False, 'message': 'Admin access required'}), 403
+        
+        data = request.get_json()
+        section_order = data.get('section_order', [])  # Array of section IDs in new order
+        
+        for index, section_id in enumerate(section_order):
+            section = InternshipDetailSection.query.get(section_id)
+            if section:
+                section.display_order = index + 1
+                section.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Sections reordered successfully'
+        }), 200
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route('/api/internship-info-chips', methods=['GET'])
+def get_internship_info_chips():
+    """Get all internship info chip configurations"""
+    try:
+        chips = InternshipInfoChip.query.filter_by(is_enabled=True).order_by(
+            InternshipInfoChip.display_order
+        ).all()
+        
+        return jsonify({
+            'success': True,
+            'chips': [{
+                'id': c.id,
+                'chip_key': c.chip_key,
+                'label': c.label,
+                'icon_name': c.icon_name,
+                'color': c.color,
+                'display_order': c.display_order,
+                'is_enabled': c.is_enabled
+            } for c in chips]
+        }), 200
+    
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route('/api/internship-info-chips/<int:id>', methods=['PUT'])
+@jwt_required()
+def update_internship_info_chip(id):
+    """Update internship info chip configuration (Admin only)"""
+    try:
+        current_user_id = get_jwt_identity()
+        user = User.query.get(current_user_id)
+        
+        if not user or user.role != 'admin':
+            return jsonify({'success': False, 'message': 'Admin access required'}), 403
+        
+        chip = InternshipInfoChip.query.get_or_404(id)
+        data = request.get_json()
+        
+        if 'label' in data:
+            chip.label = data['label']
+        if 'icon_name' in data:
+            chip.icon_name = data['icon_name']
+        if 'color' in data:
+            chip.color = data['color']
+        if 'is_enabled' in data:
+            chip.is_enabled = data['is_enabled']
+        if 'display_order' in data:
+            chip.display_order = data['display_order']
+        
+        chip.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Info chip updated successfully',
+            'chip': {
+                'id': chip.id,
+                'chip_key': chip.chip_key,
+                'label': chip.label,
+                'icon_name': chip.icon_name,
+                'color': chip.color,
+                'display_order': chip.display_order,
+                'is_enabled': chip.is_enabled
+            }
+        }), 200
     
     except Exception as e:
         db.session.rollback()
