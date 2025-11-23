@@ -372,7 +372,7 @@ class _NameEmailScreenState extends State<NameEmailScreen> {
                       ],
                     ),
                   ),
-                  
+
                   // Bottom wave decoration
                   Container(
                     width: double.infinity,
@@ -486,12 +486,7 @@ class BottomWavePainter extends CustomPainter {
       width * 0.5,
       height * 0.2,
     );
-    path.quadraticBezierTo(
-      width * 0.75,
-      height * 0.2,
-      width,
-      height,
-    );
+    path.quadraticBezierTo(width * 0.75, height * 0.2, width, height);
     path.lineTo(width, height);
     path.close();
 

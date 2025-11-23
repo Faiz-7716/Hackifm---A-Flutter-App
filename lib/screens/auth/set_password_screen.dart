@@ -368,21 +368,21 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                               ),
                       ),
                     ),
-                  
-                  // Bottom wave decoration
-                  Container(
-                    width: double.infinity,
-                    height: 150,
-                    child: CustomPaint(
-                      size: Size(MediaQuery.of(context).size.width, 150),
-                      painter: BottomWavePainter(),
+
+                    // Bottom wave decoration
+                    Container(
+                      width: double.infinity,
+                      height: 150,
+                      child: CustomPaint(
+                        size: Size(MediaQuery.of(context).size.width, 150),
+                        painter: BottomWavePainter(),
+                      ),
                     ),
-                  ),
-                ], // Closes children of Column
-              ), // Closes Column
-            ), // Closes Form
-          ), // Closes Padding
-        ), // Closes Expanded
+                  ], // Closes children of Column
+                ), // Closes Column
+              ), // Closes Form
+            ), // Closes Padding
+          ), // Closes Expanded
         ], // Closes children of Scaffold body Column
       ), // Closes Scaffold body Column
     ); // Closes Scaffold
@@ -548,12 +548,7 @@ class BottomWavePainter extends CustomPainter {
       width * 0.5,
       height * 0.2,
     );
-    path.quadraticBezierTo(
-      width * 0.75,
-      height * 0.2,
-      width,
-      height,
-    );
+    path.quadraticBezierTo(width * 0.75, height * 0.2, width, height);
     path.lineTo(width, height);
     path.close();
 
