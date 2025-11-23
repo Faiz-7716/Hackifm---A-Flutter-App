@@ -278,6 +278,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ),
                   ),
                   SizedBox(height: isSmallScreen ? 16 : 20),
+                  
+                  // Bottom wave decoration
+                  Container(
+                    width: double.infinity,
+                    height: 150,
+                    child: CustomPaint(
+                      size: Size(MediaQuery.of(context).size.width, 150),
+                      painter: BottomWavePainter(),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -567,6 +577,43 @@ class ForgotPasswordWavePainter extends CustomPainter {
     path2.close();
 
     canvas.drawPath(path2, paint2);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class BottomWavePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFF3B82F6), Color(0xFF60A5FA)],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    final path = Path();
+    final width = size.width;
+    final height = size.height;
+
+    path.moveTo(0, height);
+    path.quadraticBezierTo(
+      width * 0.25,
+      height * 0.2,
+      width * 0.5,
+      height * 0.2,
+    );
+    path.quadraticBezierTo(
+      width * 0.75,
+      height * 0.2,
+      width,
+      height,
+    );
+    path.lineTo(width, height);
+    path.close();
+
+    canvas.drawPath(path, paint);
   }
 
   @override

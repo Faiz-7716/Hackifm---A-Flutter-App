@@ -477,9 +477,107 @@ class _SignUpPageState extends State<SignUpPage> {
                       ],
                     ),
                   ),
-                  SizedBox(height: isSmallScreen ? 16 : 20),
+                  const Spacer(),
                 ],
               ),
+            ),
+          ),
+
+          SizedBox(height: isSmallScreen ? 24 : 32),
+
+          // Sign up button
+          SizedBox(
+            width: double.infinity,
+            height: isSmallScreen ? 48 : 56,
+            child: ElevatedButton(
+              onPressed:
+                  (_isLoading || !_isFormValid()) ? null : _handleSignup,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF3B82F6),
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: Colors.grey[300],
+                disabledForegroundColor: Colors.grey[500],
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Text(
+                      'SIGN UP',
+                      style: TextStyle(
+                        fontSize: isSmallScreen ? 14 : 16,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+            ),
+          ),
+
+          SizedBox(height: isSmallScreen ? 12 : 16),
+
+          // Sign in link
+          Center(
+            child: Wrap(
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Text(
+                  'You already have an account? ',
+                  style: TextStyle(
+                    fontSize: subtitleFontSize,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, '/login');
+                  },
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(0, 0),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    'Sign In',
+                    style: TextStyle(
+                      fontSize: subtitleFontSize,
+                      color: AuthColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: isSmallScreen ? 16 : 20),
+          ],
+              ),
+            ),
+          ),
+          // Simple blue background container at bottom
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              gradient: AuthColors.primaryGradient,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CustomPaint(
+                  size: Size(MediaQuery.of(context).size.width, 30),
+                  painter: MountainCurvePainter(),
+                ),
+                SizedBox(height: 50),
+              ],
             ),
           ),
         ],
