@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'dart:async';
 import '../../services/api_service.dart';
 import 'set_password_screen.dart';
+import '../../widgets/mountain_curve_painter.dart';
 
 class OTPVerificationScreen extends StatefulWidget {
   final String name;
@@ -253,307 +254,252 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
     final waveSize = isSmallScreen ? 120.0 : 140.0;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(
-              horizontal: horizontalPadding,
-              vertical: 20.0,
-            ),
-            child: Container(
-              constraints: BoxConstraints(maxWidth: maxWidth),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
+      backgroundColor: Colors.white,
+      body: Column(
+        children: [
+          // Blue header section with logo
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(gradient: AuthColors.primaryGradient),
+            child: Column(
+              children: [
+                const SizedBox(height: 5),
+                // Logo
+                Center(
+                  child: Image.asset(
+                    'assets/logo.png',
+                    width: 140,
+                    height: 140,
                   ),
-                ],
-              ),
-              child: Stack(
-                children: [
-                  // Pink wave decorations
-                  Positioned(
-                    top: 0,
-                    right: 0,
-                    child: CustomPaint(
-                      size: Size(waveSize, waveSize),
-                      painter: TopRightWavePainter(),
-                    ),
-                  ),
-
-                  // Main content
-                  Padding(
-                    padding: EdgeInsets.all(contentPadding),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(height: isSmallScreen ? 10 : 20),
-
-                        // Motivational box
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            gradient: AuthColors.primaryGradient,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AuthColors.primary.withOpacity(0.3),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.rocket_launch,
-                                color: Colors.white,
-                                size: isSmallScreen ? 24 : 28,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  'Almost There! Verify Your Email',
-                                  style: TextStyle(
-                                    fontSize: isSmallScreen ? 15 : 17,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: isSmallScreen ? 24 : 32),
-
-                        // Header
-                        Text(
-                          'Verify\nEmail',
-                          style: TextStyle(
-                            fontSize: titleFontSize,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF2D3142),
-                            height: 1.2,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Enter the 6-digit code sent to\n${widget.email}',
-                          style: TextStyle(
-                            fontSize: subtitleFontSize,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        SizedBox(height: isSmallScreen ? 24 : 32),
-
-                        // Progress indicator
-                        Row(
-                          children: [
-                            _buildStepIndicator(1, false, 'Details'),
-                            _buildStepLine(true),
-                            _buildStepIndicator(2, true, 'Verify'),
-                            _buildStepLine(false),
-                            _buildStepIndicator(3, false, 'Password'),
-                          ],
-                        ),
-                        const SizedBox(height: 40),
-
-                        // OTP Input boxes
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: List.generate(
-                            6,
-                            (index) => _buildOTPBox(index),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-
-                        // Paste from clipboard button
-                        Center(
-                          child: TextButton.icon(
-                            onPressed: _isLoading
-                                ? null
-                                : () async {
-                                    final clipboardData =
-                                        await Clipboard.getData(
-                                          Clipboard.kTextPlain,
-                                        );
-                                    if (clipboardData?.text != null) {
-                                      _handlePaste(clipboardData!.text!, 0);
-                                    }
-                                  },
-                            icon: Icon(
-                              Icons.content_paste,
-                              size: 16,
-                              color: AuthColors.primary,
-                            ),
-                            label: Text(
-                              'Paste OTP',
-                              style: TextStyle(
-                                color: AuthColors.primary,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-
-                        // Attempts remaining indicator
-                        if (_attemptsRemaining != null && !_isLocked) ...[
-                          Center(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.orange.shade50,
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: Colors.orange.shade200,
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.warning_amber_rounded,
-                                    size: 16,
-                                    color: Colors.orange[700],
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    '$_attemptsRemaining attempts remaining',
-                                    style: TextStyle(
-                                      color: Colors.orange[700],
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                        ],
-
-                        // Locked indicator
-                        if (_isLocked) ...[
-                          Center(
-                            child: Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.red.shade50,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.red.shade200),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.lock_outlined,
-                                    color: Colors.red[700],
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      'Too many failed attempts. Please request a new OTP.',
-                                      style: TextStyle(
-                                        color: Colors.red[700],
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                        ],
-
-                        // Verify button
-                        SizedBox(
-                          width: double.infinity,
-                          height: 50,
-                          child: ElevatedButton(
-                            onPressed: _isLoading || _isLocked
-                                ? null
-                                : _verifyOTP,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AuthColors.primary,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 0,
-                            ),
-                            child: _isLoading
-                                ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Text(
-                                    'Verify OTP',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-
-                        // Resend OTP
-                        Center(
-                          child: _canResend
-                              ? TextButton(
-                                  onPressed: _isLoading ? null : _resendOTP,
-                                  child: const Text(
-                                    'Resend OTP',
-                                    style: TextStyle(
-                                      color: AuthColors.primary,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                )
-                              : Text(
-                                  'Resend OTP in $_resendTimer seconds',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 14,
-                                  ),
-                                ),
-                        ),
-                        const SizedBox(height: 10),
-
-                        // Change email
-                        Center(
-                          child: TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text(
-                              'Change Email',
-                              style: TextStyle(color: AuthColors.primary),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 5),
+                // Mountain curve at bottom
+                CustomPaint(
+                  size: Size(MediaQuery.of(context).size.width, 30),
+                  painter: MountainCurvePainter(),
+                ),
+              ],
             ),
           ),
-        ),
-      ),
-    );
+          // Form content
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: contentPadding,
+                vertical: isSmallScreen ? 12.0 : 16.0,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header
+                  Text(
+                    'Verify\nEmail',
+                    style: TextStyle(
+                      fontSize: titleFontSize,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF2D3142),
+                      height: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Enter the 6-digit code sent to\n${widget.email}',
+                    style: TextStyle(
+                      fontSize: subtitleFontSize,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  SizedBox(height: isSmallScreen ? 24 : 32),
+
+                  // Progress indicator
+                  Row(
+                    children: [
+                      _buildStepIndicator(1, false, 'Details'),
+                      _buildStepLine(true),
+                      _buildStepIndicator(2, true, 'Verify'),
+                      _buildStepLine(false),
+                      _buildStepIndicator(3, false, 'Password'),
+                    ],
+                  ),
+                  const SizedBox(height: 40),
+
+                  // OTP Input boxes
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: List.generate(6, (index) => _buildOTPBox(index)),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Paste from clipboard button
+                  Center(
+                    child: TextButton.icon(
+                      onPressed: _isLoading
+                          ? null
+                          : () async {
+                              final clipboardData = await Clipboard.getData(
+                                Clipboard.kTextPlain,
+                              );
+                              if (clipboardData?.text != null) {
+                                _handlePaste(clipboardData!.text!, 0);
+                              }
+                            },
+                      icon: Icon(
+                        Icons.content_paste,
+                        size: 16,
+                        color: AuthColors.primary,
+                      ),
+                      label: Text(
+                        'Paste OTP',
+                        style: TextStyle(
+                          color: AuthColors.primary,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Attempts remaining indicator
+                  if (_attemptsRemaining != null && !_isLocked) ...[
+                    Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.shade50,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.orange.shade200),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.warning_amber_rounded,
+                              size: 16,
+                              color: Colors.orange[700],
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '$_attemptsRemaining attempts remaining',
+                              style: TextStyle(
+                                color: Colors.orange[700],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+
+                  // Locked indicator
+                  if (_isLocked) ...[
+                    Center(
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.red.shade200),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.lock_outlined, color: Colors.red[700]),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Too many failed attempts. Please request a new OTP.',
+                                style: TextStyle(
+                                  color: Colors.red[700],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+
+                  // Verify button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: _isLoading || _isLocked ? null : _verifyOTP,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AuthColors.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text(
+                              'Verify OTP',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Resend OTP
+                  Center(
+                    child: _canResend
+                        ? TextButton(
+                            onPressed: _isLoading ? null : _resendOTP,
+                            child: const Text(
+                              'Resend OTP',
+                              style: TextStyle(
+                                color: AuthColors.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          )
+                        : Text(
+                            'Resend OTP in $_resendTimer seconds',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 14,
+                            ),
+                          ),
+                  ),
+                  const SizedBox(height: 10),
+
+                  // Change email
+                  Center(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text(
+                        'Change Email',
+                        style: TextStyle(color: AuthColors.primary),
+                      ),
+                    ),
+                  ),
+                ], // Closes children of Column
+              ), // Closes Column
+            ), // Closes SingleChildScrollView
+          ), // Closes Expanded
+        ], // Closes children of Scaffold body Column
+      ), // Closes Scaffold body Column
+    ); // Closes Scaffold
   }
 
   Widget _buildOTPBox(int index) {

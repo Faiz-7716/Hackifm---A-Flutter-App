@@ -50,7 +50,7 @@ class _AdminAddCourseScreenState extends State<AdminAddCourseScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ Course added successfully!'),
+            content: Text('Course added successfully!'),
             backgroundColor: Colors.green,
           ),
         );
@@ -59,7 +59,7 @@ class _AdminAddCourseScreenState extends State<AdminAddCourseScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('❌ Error: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {

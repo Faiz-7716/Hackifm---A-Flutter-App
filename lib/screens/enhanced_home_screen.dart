@@ -141,7 +141,7 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen>
       padding: const EdgeInsets.all(16),
       children: [
         const Text(
-          '🔥 This Week\'s Hottest Opportunities',
+          'This Week\'s Top Opportunities',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),

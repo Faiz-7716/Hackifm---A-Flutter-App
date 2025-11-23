@@ -255,7 +255,7 @@ class AdminHomeScreen extends StatelessWidget {
 
               // Quick Stats
               const Text(
-                '📊 Quick Stats',
+                'Quick Stats',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,

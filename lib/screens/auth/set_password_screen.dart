@@ -3,6 +3,7 @@ import '../../utils/auth_colors.dart';
 import '../../services/api_service.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/mountain_curve_painter.dart';
 
 class SetPasswordScreen extends StatefulWidget {
   final String name;
@@ -173,258 +174,208 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
     final waveSize = isSmallScreen ? 120.0 : 140.0;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(
-              horizontal: horizontalPadding,
-              vertical: 20.0,
+      backgroundColor: Colors.white,
+      body: Column(
+        children: [
+          // Blue header section with logo
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(gradient: AuthColors.primaryGradient),
+            child: Column(
+              children: [
+                const SizedBox(height: 5),
+                // Logo
+                Center(
+                  child: Image.asset(
+                    'assets/logo.png',
+                    width: 140,
+                    height: 140,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                // Mountain curve at bottom
+                CustomPaint(
+                  size: Size(MediaQuery.of(context).size.width, 30),
+                  painter: MountainCurvePainter(),
+                ),
+              ],
             ),
-            child: Container(
-              constraints: BoxConstraints(maxWidth: maxWidth),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
+          ),
+          // Form content
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: contentPadding,
+                vertical: isSmallScreen ? 12.0 : 16.0,
               ),
-              child: Stack(
-                children: [
-                  // Pink wave decorations
-                  Positioned(
-                    top: 0,
-                    right: 0,
-                    child: CustomPaint(
-                      size: Size(waveSize, waveSize),
-                      painter: TopRightWavePainter(),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header
+                    Text(
+                      'Set\nPassword',
+                      style: TextStyle(
+                        fontSize: titleFontSize,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF2D3142),
+                        height: 1.2,
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Create a strong password for your account',
+                      style: TextStyle(
+                        fontSize: subtitleFontSize,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    SizedBox(height: isSmallScreen ? 24 : 32),
 
-                  // Main content
-                  Padding(
-                    padding: EdgeInsets.all(contentPadding),
-                    child: Form(
-                      key: _formKey,
+                    // Progress indicator
+                    Row(
+                      children: [
+                        _buildStepIndicator(1, false, 'Details'),
+                        _buildStepLine(true),
+                        _buildStepIndicator(2, false, 'Verify'),
+                        _buildStepLine(true),
+                        _buildStepIndicator(3, true, 'Password'),
+                      ],
+                    ),
+                    const SizedBox(height: 40),
+
+                    // Password field
+                    _buildTextField(
+                      controller: _passwordController,
+                      hint: 'Password',
+                      icon: Icons.lock_outline,
+                      obscureText: _obscurePassword,
+                      onChanged: _checkPasswordStrength,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          color: Colors.grey,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Password requirements
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey[200]!),
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          SizedBox(height: isSmallScreen ? 10 : 20),
-
-                          // Motivational box
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              gradient: AuthColors.primaryGradient,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(
-                                    0xFF10B981,
-                                  ).withOpacity(0.2),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.rocket_launch,
-                                  color: Colors.white,
-                                  size: isSmallScreen ? 24 : 28,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    'Final Step! Set Your Password',
-                                    style: TextStyle(
-                                      fontSize: isSmallScreen ? 15 : 17,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(height: isSmallScreen ? 24 : 32),
-
-                          // Header
-                          Text(
-                            'Set\nPassword',
+                          const Text(
+                            'Password must contain:',
                             style: TextStyle(
-                              fontSize: titleFontSize,
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF2D3142),
-                              height: 1.2,
+                              fontSize: 14,
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Create a strong password for your account',
-                            style: TextStyle(
-                              fontSize: subtitleFontSize,
-                              color: Colors.grey[600],
-                            ),
+                          const SizedBox(height: 12),
+                          _buildRequirement(
+                            'At least 8 characters',
+                            _hasMinLength,
                           ),
-                          SizedBox(height: isSmallScreen ? 24 : 32),
-
-                          // Progress indicator
-                          Row(
-                            children: [
-                              _buildStepIndicator(1, false, 'Details'),
-                              _buildStepLine(true),
-                              _buildStepIndicator(2, false, 'Verify'),
-                              _buildStepLine(true),
-                              _buildStepIndicator(3, true, 'Password'),
-                            ],
+                          _buildRequirement(
+                            'One uppercase letter (A-Z)',
+                            _hasUppercase,
                           ),
-                          const SizedBox(height: 40),
-
-                          // Password field
-                          _buildTextField(
-                            controller: _passwordController,
-                            hint: 'Password',
-                            icon: Icons.lock_outline,
-                            obscureText: _obscurePassword,
-                            onChanged: _checkPasswordStrength,
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility_outlined
-                                    : Icons.visibility_off_outlined,
-                                color: Colors.grey,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _obscurePassword = !_obscurePassword;
-                                });
-                              },
-                            ),
+                          _buildRequirement(
+                            'One lowercase letter (a-z)',
+                            _hasLowercase,
                           ),
-                          const SizedBox(height: 20),
-
-                          // Password requirements
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[50],
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.grey[200]!),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Password must contain:',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                _buildRequirement(
-                                  'At least 8 characters',
-                                  _hasMinLength,
-                                ),
-                                _buildRequirement(
-                                  'One uppercase letter (A-Z)',
-                                  _hasUppercase,
-                                ),
-                                _buildRequirement(
-                                  'One lowercase letter (a-z)',
-                                  _hasLowercase,
-                                ),
-                                _buildRequirement(
-                                  'One number (0-9)',
-                                  _hasNumber,
-                                ),
-                                _buildRequirement(
-                                  'One special character (!@#\$%^&*)',
-                                  _hasSpecialChar,
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-
-                          // Confirm password field
-                          _buildTextField(
-                            controller: _confirmPasswordController,
-                            hint: 'Confirm Password',
-                            icon: Icons.lock_outline,
-                            obscureText: _obscureConfirmPassword,
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscureConfirmPassword
-                                    ? Icons.visibility_outlined
-                                    : Icons.visibility_off_outlined,
-                                color: Colors.grey,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _obscureConfirmPassword =
-                                      !_obscureConfirmPassword;
-                                });
-                              },
-                            ),
-                          ),
-                          SizedBox(height: isSmallScreen ? 24 : 32),
-
-                          // Create account button
-                          SizedBox(
-                            width: double.infinity,
-                            height: 50,
-                            child: ElevatedButton(
-                              onPressed: (_isLoading || !_isFormValid())
-                                  ? null
-                                  : _createAccount,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AuthColors.primary,
-                                foregroundColor: Colors.white,
-                                disabledBackgroundColor: Colors.grey[300],
-                                disabledForegroundColor: Colors.grey[500],
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              child: _isLoading
-                                  ? const SizedBox(
-                                      height: 20,
-                                      width: 20,
-                                      child: CircularProgressIndicator(
-                                        color: Colors.white,
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Text(
-                                      'Create Account',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                            ),
+                          _buildRequirement('One number (0-9)', _hasNumber),
+                          _buildRequirement(
+                            'One special character (!@#\$%^&*)',
+                            _hasSpecialChar,
                           ),
                         ],
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
+                    const SizedBox(height: 20),
+
+                    // Confirm password field
+                    _buildTextField(
+                      controller: _confirmPasswordController,
+                      hint: 'Confirm Password',
+                      icon: Icons.lock_outline,
+                      obscureText: _obscureConfirmPassword,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscureConfirmPassword
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          color: Colors.grey,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscureConfirmPassword = !_obscureConfirmPassword;
+                          });
+                        },
+                      ),
+                    ),
+                    SizedBox(height: isSmallScreen ? 24 : 32),
+
+                    // Create account button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: (_isLoading || !_isFormValid())
+                            ? null
+                            : _createAccount,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AuthColors.primary,
+                          foregroundColor: Colors.white,
+                          disabledBackgroundColor: Colors.grey[300],
+                          disabledForegroundColor: Colors.grey[500],
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text(
+                                'Create Account',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ],
+                ), // Closes children of Form/Column
+              ), // Closes Form/Column
+            ), // Closes SingleChildScrollView
+          ), // Closes Expanded
+        ], // Closes children of Scaffold body Column
+      ), // Closes Scaffold body Column
+    ); // Closes Scaffold
   }
 
   Widget _buildRequirement(String text, bool isMet) {

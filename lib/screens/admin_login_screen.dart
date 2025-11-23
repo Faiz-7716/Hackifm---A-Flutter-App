@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hackifm/utils/security_utils.dart';
+import 'package:hackifm/widgets/mountain_curve_painter.dart';
+import 'package:hackifm/utils/auth_colors.dart';
 
 class AdminLoginScreen extends StatefulWidget {
   const AdminLoginScreen({super.key});
@@ -177,24 +179,39 @@ class _AdminLoginScreenState extends State<AdminLoginScreen>
     final isSmallScreen = size.width < 600;
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              const Color(0xFF1A1A2E),
-              const Color(0xFF16213E),
-              Colors.black.withOpacity(0.9),
-            ],
+      backgroundColor: Colors.white,
+      body: Column(
+        children: [
+          // Blue header section with logo
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(gradient: AuthColors.primaryGradient),
+            child: Column(
+              children: [
+                const SizedBox(height: 5),
+                // Logo
+                Center(
+                  child: Image.asset(
+                    'assets/logo.png',
+                    width: 140,
+                    height: 140,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                // Mountain curve at bottom
+                CustomPaint(
+                  size: Size(size.width, 30),
+                  painter: MountainCurvePainter(),
+                ),
+              ],
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
+          // Form content
+          Expanded(
+            child: Padding(
               padding: EdgeInsets.symmetric(
                 horizontal: isSmallScreen ? 24 : 48,
-                vertical: 24,
+                vertical: isSmallScreen ? 12 : 16,
               ),
               child: AnimatedBuilder(
                 animation: _shakeAnimation,
@@ -568,7 +585,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen>
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:hackifm/providers/auth_provider.dart';
 import 'package:hackifm/widgets/responsive_auth_wrapper.dart';
 import 'package:hackifm/utils/auth_colors.dart';
+import 'package:hackifm/widgets/mountain_curve_painter.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -17,6 +18,31 @@ class _LoginPageState extends State<LoginPage> {
   bool _rememberMe = false;
   bool _obscurePassword = true;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController.addListener(_validateForm);
+    _passwordController.addListener(_validateForm);
+  }
+
+  bool _isFormValid() {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    // Email validation
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    final isEmailValid = email.isNotEmpty && emailRegex.hasMatch(email);
+
+    // Password must not be empty
+    final isPasswordValid = password.isNotEmpty;
+
+    return isEmailValid && isPasswordValid;
+  }
+
+  void _validateForm() {
+    setState(() {});
+  }
 
   Future<void> _handleLogin() async {
     final email = _emailController.text.trim();
@@ -74,312 +100,535 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth >= 1024;
 
     // Responsive sizing
     final isSmallScreen = screenWidth < 600;
-    final isMediumScreen = screenWidth >= 600 && screenWidth < 1024;
-    final maxWidth = isSmallScreen
-        ? double.infinity
-        : (isMediumScreen ? 500.0 : 450.0);
-    final horizontalPadding = isSmallScreen ? 16.0 : 24.0;
     final contentPadding = isSmallScreen ? 24.0 : 32.0;
-    final titleFontSize = isSmallScreen ? 28.0 : 32.0;
     final subtitleFontSize = isSmallScreen ? 12.0 : 14.0;
-    final waveSize = isSmallScreen ? 100.0 : 120.0;
 
-    final mobileLayout = Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
+    // Form content widget (reused for both mobile and desktop)
+    final formContent = Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: contentPadding,
+        vertical: isSmallScreen ? 12.0 : 16.0,
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Motivational Headline
+          Container(
             padding: EdgeInsets.symmetric(
-              horizontal: horizontalPadding,
-              vertical: 20.0,
+              horizontal: isSmallScreen ? 16 : 20,
+              vertical: isSmallScreen ? 12 : 14,
             ),
-            child: Container(
-              constraints: BoxConstraints(maxWidth: maxWidth),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
+            decoration: BoxDecoration(
+              gradient: AuthColors.primaryGradient,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: AuthColors.getElevationShadow(elevation: 4),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.rocket_launch,
+                  color: Colors.white,
+                  size: isSmallScreen ? 24 : 28,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Hack Your Future with HackIFM',
+                    style: TextStyle(
+                      fontSize: isSmallScreen ? 17 : 19,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 0.3,
+                    ),
                   ),
-                ],
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: isSmallScreen ? 16 : 20),
+
+          // Title
+          Text(
+            'Welcome\nBack',
+            style: TextStyle(
+              fontSize: isSmallScreen ? 22 : 28,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF2D3142),
+              height: 1.2,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Hey! Good to see you again',
+            style: TextStyle(
+              fontSize: subtitleFontSize,
+              color: Colors.grey[600],
+            ),
+          ),
+          SizedBox(height: isSmallScreen ? 12 : 16),
+
+          // Email field
+          _buildTextField(
+            controller: _emailController,
+            hint: 'Email',
+            icon: Icons.email_outlined,
+          ),
+          const SizedBox(height: 16),
+
+          // Password field
+          _buildTextField(
+            controller: _passwordController,
+            hint: 'Password',
+            icon: Icons.lock_outline,
+            obscureText: _obscurePassword,
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                color: Colors.grey[400],
+                size: 20,
               ),
-              child: Stack(
+              onPressed: () {
+                setState(() {
+                  _obscurePassword = !_obscurePassword;
+                });
+              },
+            ),
+          ),
+          SizedBox(height: isSmallScreen ? 6 : 8),
+
+          // Remember me and Forgot Password
+          Row(
+            children: [
+              SizedBox(
+                height: 24,
+                width: 24,
+                child: Checkbox(
+                  value: _rememberMe,
+                  onChanged: (value) {
+                    setState(() {
+                      _rememberMe = value ?? false;
+                    });
+                  },
+                  activeColor: AuthColors.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Remember me',
+                style: TextStyle(
+                  fontSize: subtitleFontSize,
+                  color: Colors.grey[700],
+                ),
+              ),
+              const Spacer(),
+              TextButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/forgot-password');
+                },
+                child: Text(
+                  'Forgot password?',
+                  style: TextStyle(
+                    fontSize: subtitleFontSize,
+                    color: AuthColors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: isSmallScreen ? 16 : 24),
+
+          // Motivational Quote
+          Container(
+            padding: EdgeInsets.all(isSmallScreen ? 10 : 12),
+            decoration: BoxDecoration(
+              gradient: AuthColors.primaryGradient,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: AuthColors.getElevationShadow(elevation: 6),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.lightbulb_outline,
+                  color: Colors.white,
+                  size: isSmallScreen ? 24 : 28,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Ideas - Future - Mastery',
+                    style: TextStyle(
+                      fontSize: isSmallScreen ? 17 : 19,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: isSmallScreen ? 10 : 14),
+
+          // Sign in button
+          SizedBox(
+            width: double.infinity,
+            height: isSmallScreen ? 48 : 56,
+            child: ElevatedButton(
+              onPressed: (_isLoading || !_isFormValid()) ? null : _handleLogin,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF3B82F6),
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: Colors.grey[300],
+                disabledForegroundColor: Colors.grey[500],
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Text(
+                      'SIGN IN',
+                      style: TextStyle(
+                        fontSize: isSmallScreen ? 14 : 16,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+            ),
+          ),
+
+          SizedBox(height: isSmallScreen ? 8 : 10),
+
+          // Sign up link
+          Center(
+            child: Wrap(
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Text(
+                  "Don't have an account? ",
+                  style: TextStyle(
+                    fontSize: subtitleFontSize,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, '/signup-new');
+                  },
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(0, 0),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    'Sign Up',
+                    style: TextStyle(
+                      fontSize: subtitleFontSize,
+                      color: AuthColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: isSmallScreen ? 16 : 20),
+        ],
+      ),
+    );
+
+    // Desktop layout - no blue header (ResponsiveAuthWrapper provides branding)
+    final desktopLayout = Scaffold(
+      backgroundColor: Colors.white,
+      body: Center(child: SingleChildScrollView(child: formContent)),
+    );
+
+    // Mobile layout - with blue header
+    final mobileLayout = Scaffold(
+      backgroundColor: Colors.white,
+      body: Column(
+        children: [
+          // Blue header section with logo
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(gradient: AuthColors.primaryGradient),
+            child: Column(
+              children: [
+                const SizedBox(height: 5),
+                // Logo
+                Center(
+                  child: Image.asset(
+                    'assets/logo.png',
+                    width: 140,
+                    height: 140,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                // Mountain curve at bottom
+                CustomPaint(
+                  size: Size(MediaQuery.of(context).size.width, 30),
+                  painter: MountainCurvePainter(),
+                ),
+              ],
+            ),
+          ),
+          // Form content
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: contentPadding,
+                vertical: isSmallScreen ? 12.0 : 16.0,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Pink wave decorations at the top
-                  Positioned(
-                    top: 0,
-                    right: 0,
-                    child: CustomPaint(
-                      size: Size(waveSize, waveSize),
-                      painter: TopRightWavePainter(),
+                  // Motivational Headline
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isSmallScreen ? 16 : 20,
+                      vertical: isSmallScreen ? 12 : 14,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: AuthColors.primaryGradient,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: AuthColors.getElevationShadow(elevation: 4),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.rocket_launch,
+                          color: Colors.white,
+                          size: isSmallScreen ? 24 : 28,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Hack Your Future with HackIFM',
+                            style: TextStyle(
+                              fontSize: isSmallScreen ? 17 : 19,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: isSmallScreen ? 16 : 20),
+
+                  // Title
+                  Text(
+                    'Welcome\nBack',
+                    style: TextStyle(
+                      fontSize: isSmallScreen ? 22 : 28,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF2D3142),
+                      height: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Hey! Good to see you again',
+                    style: TextStyle(
+                      fontSize: subtitleFontSize,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  SizedBox(height: isSmallScreen ? 12 : 16),
+
+                  // Email field
+                  _buildTextField(
+                    controller: _emailController,
+                    hint: 'Email',
+                    icon: Icons.email_outlined,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Password field
+                  _buildTextField(
+                    controller: _passwordController,
+                    hint: 'Password',
+                    icon: Icons.lock_outline,
+                    obscureText: _obscurePassword,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: Colors.grey[400],
+                        size: 20,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
+                  ),
+                  SizedBox(height: isSmallScreen ? 6 : 8),
+
+                  // Remember me and Forgot Password
+                  Row(
+                    children: [
+                      SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: Checkbox(
+                          value: _rememberMe,
+                          onChanged: (value) {
+                            setState(() {
+                              _rememberMe = value ?? false;
+                            });
+                          },
+                          activeColor: AuthColors.primary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Remember me',
+                        style: TextStyle(
+                          fontSize: subtitleFontSize,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                      const Spacer(),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/forgot-password');
+                        },
+                        child: Text(
+                          'Forgot password?',
+                          style: TextStyle(
+                            fontSize: subtitleFontSize,
+                            color: AuthColors.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: isSmallScreen ? 16 : 24),
+
+                  // Sign in button
+                  SizedBox(
+                    width: double.infinity,
+                    height: isSmallScreen ? 48 : 56,
+                    child: ElevatedButton(
+                      onPressed: (_isLoading || !_isFormValid())
+                          ? null
+                          : _handleLogin,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF3B82F6),
+                        foregroundColor: Colors.white,
+                        disabledBackgroundColor: Colors.grey[300],
+                        disabledForegroundColor: Colors.grey[500],
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              'SIGN IN',
+                              style: TextStyle(
+                                fontSize: isSmallScreen ? 14 : 16,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
                     ),
                   ),
 
-                  // Main content
-                  Padding(
-                    padding: EdgeInsets.all(contentPadding),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  SizedBox(height: isSmallScreen ? 8 : 10),
+
+                  // Sign up link
+                  Center(
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        SizedBox(height: isSmallScreen ? 10 : 20),
-
-                        // Motivational Quote
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            gradient: AuthColors.primaryGradient,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: AuthColors.getElevationShadow(
-                              elevation: 6,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.rocket_launch,
-                                color: Colors.white,
-                                size: isSmallScreen ? 24 : 28,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  'Hack Your Future with HackIFM',
-                                  style: TextStyle(
-                                    fontSize: isSmallScreen ? 15 : 17,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: isSmallScreen ? 24 : 32),
-
-                        // Title
                         Text(
-                          'Welcome\nBack',
-                          style: TextStyle(
-                            fontSize: titleFontSize,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF2D3142),
-                            height: 1.2,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Hey! Good to see you again',
+                          "Don't have an account? ",
                           style: TextStyle(
                             fontSize: subtitleFontSize,
                             color: Colors.grey[600],
                           ),
                         ),
-                        SizedBox(height: isSmallScreen ? 24 : 32),
-
-                        // Email field
-                        _buildTextField(
-                          controller: _emailController,
-                          hint: 'Email',
-                          icon: Icons.email_outlined,
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Password field
-                        _buildTextField(
-                          controller: _passwordController,
-                          hint: 'Password',
-                          icon: Icons.lock_outline,
-                          obscureText: _obscurePassword,
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
-                              color: Colors.grey[400],
-                              size: 20,
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pushReplacementNamed(
+                              context,
+                              '/signup-new',
+                            );
+                          },
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: const Size(0, 0),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: Text(
+                            'Sign Up',
+                            style: TextStyle(
+                              fontSize: subtitleFontSize,
+                              color: AuthColors.primary,
+                              fontWeight: FontWeight.w600,
                             ),
-                            onPressed: () {
-                              setState(() {
-                                _obscurePassword = !_obscurePassword;
-                              });
-                            },
                           ),
                         ),
-                        SizedBox(height: isSmallScreen ? 8 : 12),
-
-                        // Remember me and Forgot password
-                        Row(
-                          children: [
-                            SizedBox(
-                              height: 24,
-                              width: 24,
-                              child: Checkbox(
-                                value: _rememberMe,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _rememberMe = value ?? false;
-                                  });
-                                },
-                                activeColor: AuthColors.primary,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Remember me',
-                              style: TextStyle(
-                                fontSize: subtitleFontSize,
-                                color: Colors.grey[700],
-                              ),
-                            ),
-                            const Spacer(),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  '/forgot-password',
-                                );
-                              },
-                              child: Text(
-                                'Forgot password?',
-                                style: TextStyle(
-                                  fontSize: subtitleFontSize,
-                                  color: AuthColors.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: isSmallScreen ? 16 : 24),
-
-                        // Pink wave section with sign in button
-                        Container(
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Stack(
-                            children: [
-                              // Wave background
-                              CustomPaint(
-                                size: Size(
-                                  double.infinity,
-                                  isSmallScreen ? 150 : 180,
-                                ),
-                                painter: LoginWavePainter(),
-                              ),
-
-                              // Sign in button
-                              Padding(
-                                padding: EdgeInsets.symmetric(
-                                  vertical: isSmallScreen ? 30.0 : 40.0,
-                                  horizontal: contentPadding,
-                                ),
-                                child: SizedBox(
-                                  width: double.infinity,
-                                  height: isSmallScreen ? 48 : 56,
-                                  child: ElevatedButton(
-                                    onPressed: _isLoading ? null : _handleLogin,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      foregroundColor: const Color(0xFF2D3142),
-                                      elevation: 0,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(28),
-                                      ),
-                                    ),
-                                    child: _isLoading
-                                        ? SizedBox(
-                                            height: 24,
-                                            width: 24,
-                                            child: CircularProgressIndicator(
-                                              color: const Color(0xFF2D3142),
-                                              strokeWidth: 2,
-                                            ),
-                                          )
-                                        : Text(
-                                            'SIGN IN',
-                                            style: TextStyle(
-                                              fontSize: isSmallScreen ? 14 : 16,
-                                              fontWeight: FontWeight.w600,
-                                              letterSpacing: 1.2,
-                                            ),
-                                          ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        SizedBox(height: isSmallScreen ? 12 : 16),
-
-                        // Sign up link
-                        Center(
-                          child: Wrap(
-                            alignment: WrapAlignment.center,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            children: [
-                              Text(
-                                "Don't have an account? ",
-                                style: TextStyle(
-                                  fontSize: subtitleFontSize,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pushReplacementNamed(
-                                    context,
-                                    '/signup-new',
-                                  );
-                                },
-                                style: TextButton.styleFrom(
-                                  padding: EdgeInsets.zero,
-                                  minimumSize: const Size(0, 0),
-                                  tapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
-                                ),
-                                child: Text(
-                                  'Sign Up',
-                                  style: TextStyle(
-                                    fontSize: subtitleFontSize,
-                                    color: AuthColors.primary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: isSmallScreen ? 16 : 20),
                       ],
                     ),
                   ),
+                  SizedBox(height: isSmallScreen ? 16 : 20),
                 ],
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
 
-    return ResponsiveAuthWrapper(
-      title: 'Welcome to HackIFM',
-      subtitle: 'Hack Your Future with Innovation,\nInternships & Mastery',
-      icon: Icons.rocket_launch,
-      mobileContent: mobileLayout,
-    );
+    // Use appropriate layout based on screen size
+    if (isDesktop) {
+      return ResponsiveAuthWrapper(
+        title: 'Welcome to HackIFM',
+        subtitle: 'Your Gateway to Courses,\nInternships & Events',
+        icon: Icons.rocket_launch,
+        mobileContent: desktopLayout,
+      );
+    } else {
+      return mobileLayout;
+    }
   }
 
   Widget _buildTextField({
@@ -415,6 +664,8 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void dispose() {
+    _emailController.removeListener(_validateForm);
+    _passwordController.removeListener(_validateForm);
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();

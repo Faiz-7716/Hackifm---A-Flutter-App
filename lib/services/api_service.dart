@@ -11,8 +11,8 @@ class ApiService {
 
   final storage = const FlutterSecureStorage();
 
-  // Session token - stored in memory for current session
-  String? _sessionToken;
+  // Session token - stored in memory for current session (static to persist across instances)
+  static String? _sessionToken;
 
   // Helper method to get token from session or persistent storage
   Future<String?> _getToken() async {

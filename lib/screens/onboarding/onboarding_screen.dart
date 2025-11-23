@@ -309,7 +309,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                     const SizedBox(width: 8),
                     const Text(
-                      '✨',
+                      '',
                       style: TextStyle(
                         fontSize: 32,
                         shadows: [

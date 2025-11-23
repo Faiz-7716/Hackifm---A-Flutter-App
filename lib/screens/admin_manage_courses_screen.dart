@@ -309,7 +309,7 @@ class _AdminManageCoursesScreenState extends State<AdminManageCoursesScreen> {
                       await db.deleteCourse(course['id'] as int);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('✅ Course deleted'),
+                          content: Text('Course deleted'),
                           backgroundColor: Colors.green,
                         ),
                       );

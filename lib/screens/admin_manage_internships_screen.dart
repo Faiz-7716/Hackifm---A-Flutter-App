@@ -89,7 +89,7 @@ class _AdminManageInternshipsScreenState
         await db.deleteInternship(id);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ Internship deleted successfully'),
+            content: Text('Internship deleted successfully'),
             backgroundColor: Colors.green,
           ),
         );

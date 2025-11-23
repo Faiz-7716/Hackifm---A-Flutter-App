@@ -345,7 +345,7 @@ class _AdminManageHackathonsScreenState
                       await db.deleteHackathon(hackathon['id'] as int);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('✅ Hackathon deleted'),
+                          content: Text('Hackathon deleted'),
                           backgroundColor: Colors.green,
                         ),
                       );

@@ -58,10 +58,9 @@ class ResponsiveAuthWrapper extends StatelessWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Logo/Icon
+                          // Logo
                           Container(
-                            width: 140,
-                            height: 140,
+                            padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.15),
                               borderRadius: BorderRadius.circular(35),
@@ -73,7 +72,11 @@ class ResponsiveAuthWrapper extends StatelessWidget {
                                 ),
                               ],
                             ),
-                            child: Icon(icon, size: 70, color: Colors.white),
+                            child: Image.asset(
+                              'assets/logo.png',
+                              width: 100,
+                              height: 100,
+                            ),
                           ),
                           const SizedBox(height: 50),
                           Text(
@@ -105,9 +108,9 @@ class ResponsiveAuthWrapper extends StatelessWidget {
                             runSpacing: 16,
                             alignment: WrapAlignment.center,
                             children: [
-                              _buildFeatureBadge('🚀 Internships'),
-                              _buildFeatureBadge('💡 Hackathons'),
-                              _buildFeatureBadge('🤖 Robotics'),
+                              _buildFeatureBadge('Courses'),
+                              _buildFeatureBadge('Internships'),
+                              _buildFeatureBadge('Events'),
                             ],
                           ),
                         ],

@@ -51,7 +51,7 @@ class _AdminAddInternshipScreenState extends State<AdminAddInternshipScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ Internship added successfully!'),
+            content: Text('Internship added successfully!'),
             backgroundColor: Colors.green,
           ),
         );
@@ -60,7 +60,7 @@ class _AdminAddInternshipScreenState extends State<AdminAddInternshipScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('❌ Error: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
